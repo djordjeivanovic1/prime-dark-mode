@@ -29,3 +29,15 @@ function addThemeCard(name, className) {
     card.innerHTML = `<div class="theme-preview ${className}"></div><div class="theme-title">${name}</div>`;
     container.appendChild(card);
 }
+
+document.getElementById('filtersButton').addEventListener('click', () => {
+    window.location.href = '../popup/popup.html';
+});
+
+document.getElementById('themesButton').addEventListener('click', () => {
+    window.location.href = '../popup/themes.html';
+});
+
+document.getElementById('settingsButton').addEventListener('click', () => {
+    window.location.href = '../popup/settings.html';
+});
