@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dark Mode Settings</title>
+    <link rel="stylesheet" href="../style/popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PRIME</h1>
+            <span class="dark-mode">DARK MODE</span>
+        </div>
+        <div class="toggle">
+            <label for="darkModeToggle">Dark mode</label>
+            <input type="checkbox" id="darkModeToggle">
+        </div>
+        <div class="slider-container">
+            <label for="brightnessSlider">Brightness</label>
+            <input type="range" id="brightnessSlider" class="slider" min="0" max="100" value="50">
+        </div>
+        <div class="slider-container">
+            <label for="contrastSlider">Contrast</label>
+            <input type="range" id="contrastSlider" class="slider" min="-100" max="100" value="-10">
+        </div>
+        <div class="slider-container">
+            <label for="sepiaSlider">Sepia</label>
+            <input type="range" id="sepiaSlider" class="slider" min="0" max="100" value="0">
+        </div>
+        <div class="slider-container">
+            <label for="greyscaleSlider">Greyscale</label>
+            <input type="range" id="greyscaleSlider" class="slider" min="0" max="100" value="0">
+        </div>
+        <div class="button-container">
+            <button class="button">Save as Theme</button>
+            <button class="button">Save settings</button>
+        </div>
+    </div>
+</body>
+</html>
