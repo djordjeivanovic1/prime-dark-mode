@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Theme</title>
+    <link rel="stylesheet" href="../style/add-theme-popup.css">
+</head>
+<body>
+    <h1>Add New Theme</h1>
+    <form id="addThemeForm">
+        <label for="themeName">Theme Name:</label>
+        <input type="text" id="themeName" name="themeName" required><br>
+        <label for="themeClass">Theme Class Name:</label>
+        <input type="text" id="themeClass" name="themeClass" required><br>
+        <button type="submit">Save Theme</button>
+    </form>
+
+    <script>
+        document.getElementById('addThemeForm').onsubmit = function(event) {
+            event.preventDefault();
+            const themeName = document.getElementById('themeName').value;
+            const themeClass = document.getElementById('themeClass').value;
+            const newTheme = { name: themeName, className: themeClass };
+            localStorage.setItem('newTheme', JSON.stringify(newTheme));
+            window.close();
+        }
+    </script>
+</body>
+</html>

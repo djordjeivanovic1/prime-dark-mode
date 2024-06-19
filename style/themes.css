@@ -1,0 +1,78 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #2d2d2d;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.theme-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.theme-card {
+    background-color: #3a3a3a;
+    border-radius: 10px;
+    width: 150px;
+    margin: 10px;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.theme-card.selected {
+    border: 2px solid #00bfff;
+}
+
+.theme-card:hover {
+    transform: scale(1.05);
+}
+
+.theme-preview {
+    height: 80px;
+    border-radius: 5px;
+}
+
+.deep-contrast {
+    background: linear-gradient(to right, black, gray);
+}
+
+.monochrome {
+    background: linear-gradient(to right, black, darkgray);
+}
+
+.sepia {
+    background: linear-gradient(to right, darkolivegreen, sienna);
+}
+
+.ivana-test {
+    background: linear-gradient(to right, indigo, plum);
+}
+
+.theme-title {
+    margin-top: 10px;
+}
+
+.edit-icon {
+    font-size: 0.8em;
+}
+
+.apply-btn, .websites-btn, .add-theme-btn {
+    background-color: #00bfff;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.apply-btn:hover, .websites-btn:hover, .add-theme-btn:hover {
+    background-color: #009acd;
+}
+
+/* Additional classes for new themes can be added here */
