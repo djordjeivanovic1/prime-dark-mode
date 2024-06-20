@@ -1,18 +1,20 @@
-document.getElementById('activeHoursToggle').addEventListener('change', function() {
-    document.getElementById('timeSettings').style.display = this.checked ? 'block' : 'none';
-});
+// document.getElementById('activeHoursToggle').addEventListener('click', function() {
+//     const timeSettings = document.getElementById('timeSettings');
+//     timeSettings.style.display = (timeSettings.style.display === 'none' || timeSettings.style.display === '') ? 'flex' : 'none';
+// });
 
-document.getElementById('shortcutToggle').addEventListener('change', function() {
-    document.getElementById('shortcutSettings').style.display = this.checked ? 'block' : 'none';
-});
+// document.getElementById('shortcutToggle').addEventListener('click', function() {
+//     const shortcutSettings = document.getElementById('shortcutSettings');
+//     shortcutSettings.style.display = (shortcutSettings.style.display === 'none' || shortcutSettings.style.display === '') ? 'flex' : 'none';
+// });
 
-function saveSettings() {
-    alert('Settings saved!');
-}
+// function saveSettings() {
+//     alert('Settings saved!');
+// }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', function() {
     const hours = [...Array(12).keys()].map(i => i + 1);
-    const minutes = [...Array(4).keys()].map(i => i * 15).map(i => i.toString().padStart(2, '0'));
+    const minutes = ["00", "15", "30", "45"];
     const periods = ["AM", "PM"];
 
     const startTimeHour = document.getElementById('startTimeHour');
@@ -22,27 +24,20 @@ document.addEventListener("DOMContentLoaded", function() {
     const endTimeMinute = document.getElementById('endTimeMinute');
     const endTimePeriod = document.getElementById('endTimePeriod');
 
-    hours.forEach(hour => {
-        const option = document.createElement('option');
-        option.value = hour.toString().padStart(2, '0');
-        option.text = hour;
-        startTimeHour.add(option.cloneNode(true));
-        endTimeHour.add(option.cloneNode(true));
-    });
+    function populateSelect(selectElement, options) {
+        options.forEach(optionValue => {
+            const option = document.createElement('option');
+            option.value = optionValue.toString().padStart(2, '0');
+            option.text = optionValue;
+            selectElement.add(option);
+        });
+    }
 
-    minutes.forEach(minute => {
-        const option = document.createElement('option');
-        option.value = minute;
-        option.text = minute;
-        startTimeMinute.add(option.cloneNode(true));
-        endTimeMinute.add(option.cloneNode(true));
-    });
-
-    periods.forEach(period => {
-        const option = document.createElement('option');
-        option.value = period;
-        option.text = period;
-        startTimePeriod.add(option.cloneNode(true));
-        endTimePeriod.add(option.cloneNode(true));
-    });
+    populateSelect(startTimeHour, hours);
+    populateSelect(endTimeHour, hours);
+    populateSelect(startTimeMinute, minutes);
+    populateSelect(endTimeMinute, minutes);
+    populateSelect(startTimePeriod, periods);
+    populateSelect(endTimePeriod, periods);
 });
+

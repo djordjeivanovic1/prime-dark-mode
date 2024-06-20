@@ -8,11 +8,30 @@
 </head>
 <body>
     <div class="settings-container">
-        <h2>Set Active Hours</h2>
-        <label class="switch">
-            <input type="checkbox" id="activeHoursToggle">
-            <span class="slider round"></span>
-        </label>
+
+        <!-- LOGO IN THE HEADER -->
+        <div class="header">
+            <img src="../assets/logos/front_logo.png" alt="Prime Dark Mode">
+        </div>
+
+       <!-- OPTION BUTTONS -->
+        <div class="options">
+            <div class="button-group-container">
+                <div class="button-group">
+                    <button class="button" id="filtersButton">Filters</button>
+                    <button class="button" id="themesButton">Themes</button>
+                    <button class="button" id="settingsButton">Settings</button>
+                </div>
+            </div>
+        </div>
+
+         <!-- TOGGLE ON/OFF SWITCH FOR ACTIVE HOURS -->
+         <div class="toggle" id="toggle-container">
+            <p>Set Active Hours</p>
+            <input type="checkbox" id="setHoursToggle">
+        </div>
+
+        <!-- SELECT TIME  -->
         <div class="time-settings" id="timeSettings">
             <select id="startTimeHour"></select> :
             <select id="startTimeMinute"></select>
@@ -23,26 +42,33 @@
             <select id="endTimePeriod"></select>
         </div>
 
-        <h2>Use System Settings</h2>
-        <p>Activate extension only when system is in dark mode</p>
-        <label class="switch">
-            <input type="checkbox" id="systemSettingsToggle">
-            <span class="slider round"></span>
-        </label>
-        
-        <h2>Extension Shortcut</h2>
-        <p>Set shortcut to toggle extension on/off</p>
-        <label class="switch">
-            <input type="checkbox" id="shortcutToggle">
-            <span class="slider round"></span>
-        </label>
-        <div class="shortcut-settings" id="shortcutSettings">
-            <div class="shortcut-key">⌘⇧D</div>
+        <!-- SYSTEM SETTINGS CONTAINER -->
+        <div class="system-settings-container" id="system-settings-container">
+            <h2>Use System Settings</h2>
+            <div class="toggle">
+                </p>Activate/Deactivate extension</p>
+                <input type="checkbox" id="setHoursToggle">
+            </div>  
         </div>
 
-        <button class="save-btn" onclick="saveSettings()">Save Settings</button>
-    </div>
+        <!-- CREATE SHORTCUT FOR EXTENSION ACTIVATION -->
+        <div class="shortcut-container" id="shortcut-container">
+            <h2>Extension Shortcut</h2>
+            <div class="toggle">
+                <p>Toggle extension</p>
+                <input type="checkbox" id="setHoursToggle">
+            </div>
+            <!-- SHORTCUT ICON -->
+            <div class="shortcut-settings" id="shortcutSettings">
+                <div class="shortcut-key">⌘⇧D</div>
+            </div>
+        </div>
+        
 
+        
+        <!-- SAVE SYSTEM SETTINGS BUTTON -->
+        <div class="save-btn-container"><button class="save-btn">Save Settings</button></div>
+    </div>
     <script src="../scripts/settings.js"></script>
 </body>
 </html>
