@@ -4,28 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Websites</title>
-    <link rel="stylesheet" href="../style/websites.css">
+    <link rel="stylesheet" href="../style/popup.css">
 </head>
 <body>
-    <h1>Websites and Applied Themes</h1>
     <div class="websites-container">
+        <div class="backButton" id="backButton">
+            <button class="back-button"></button>
+        </div>
+        </br>
+        <h1>Websites and Applied Themes</h1>
         <div class="website-card">
             <div class="website-info">
-                <div class="website-name">Website 1</div>
-                <div class="website-theme">Deep Contrast</div>
+                <div class="website-name">Website Name 1</div>
             </div>
-            <button class="edit-btn" onclick="editWebsite()">Edit</button>
+            <div class="website-actions">
+                <button class="edit-btn" id="editButton" >Edit</button>
+                <div class="toggle">
+                    <input type="checkbox" id="websiteToggle">
+                </div>
+            </div>
         </div>
         <div class="website-card">
             <div class="website-info">
-                <div class="website-name">Website 2</div>
-                <div class="website-theme">Monochrome</div>
+                <div class="website-name">Website Name 2</div>
             </div>
-            <button class="edit-btn" onclick="editWebsite()">Edit</button>
+            <div class="website-actions">
+                <button class="edit-btn"  id="editButton">Edit</button>
+                <div class="toggle">
+                    <input type="checkbox" id="websiteToggle">
+                </div>
+            </div>
         </div>
-        <!-- Add more website cards as needed -->
     </div>
-
     <script src="../scripts/pages/websites.js"></script>
 </body>
 </html>
+

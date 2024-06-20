@@ -1,16 +1,14 @@
-// document.getElementById('activeHoursToggle').addEventListener('click', function() {
-//     const timeSettings = document.getElementById('timeSettings');
-//     timeSettings.style.display = (timeSettings.style.display === 'none' || timeSettings.style.display === '') ? 'flex' : 'none';
-// });
+document.getElementById('filtersButton').addEventListener('click', () => {
+    window.location.href = '../popup/popup.html';
+});
 
-// document.getElementById('shortcutToggle').addEventListener('click', function() {
-//     const shortcutSettings = document.getElementById('shortcutSettings');
-//     shortcutSettings.style.display = (shortcutSettings.style.display === 'none' || shortcutSettings.style.display === '') ? 'flex' : 'none';
-// });
+document.getElementById('themesButton').addEventListener('click', () => {
+    window.location.href = '../popup/themes.html';
+});
 
-// function saveSettings() {
-//     alert('Settings saved!');
-// }
+document.getElementById('settingsButton').addEventListener('click', () => {
+    window.location.href = '../popup/settings.html';
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const hours = [...Array(12).keys()].map(i => i + 1);

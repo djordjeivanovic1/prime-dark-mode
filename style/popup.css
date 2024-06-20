@@ -13,7 +13,8 @@
     --slider-thumb-background-color: #0af7ff;
     --slider-background-color: #1e3762;
     --toggle-background-color: #4a5568;
-
+    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --card-hover-shadow: 0 0 10px #3babc7;
     --header-background-color: #1e1e2e;
     --link-color: #1bb3e6;
     --input-text-color: #ffffff;
@@ -545,5 +546,65 @@ select {
 }
 
 .modal form button:hover {
+    background-color: var(--button-hover-background-color);
+}
+
+/* /////////////// */
+/* WEBSITES LISTED */
+
+
+.websites-container {
+    width: 350px;
+    height: 510px;
+    padding: 20px;
+    background: var(--background-color);
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.website-card {
+    background-color: var(--card-background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: box-shadow 0.3s ease;
+}
+
+.website-card:hover {
+    box-shadow: var(--card-hover-shadow);
+}
+
+.website-info {
+    flex-grow: 1;
+}
+
+.website-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.website-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.edit-btn {
+    padding: 10px 20px;
+    background-color: var(--button-background-color);
+    border: none;
+    border-radius: 5px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.edit-btn:hover {
     background-color: var(--button-hover-background-color);
 }
