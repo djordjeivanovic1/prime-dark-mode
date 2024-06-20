@@ -12,8 +12,11 @@
     "permissions": [
         "storage",
         "activeTab",
+        "scripting",
         "tabs"
+    
     ],
+    "host_permissions": ["http://*/*", "https://*/*"],
     "action": {
         "default_popup": "popup/popup.html",
         "default_icon": {
@@ -33,7 +36,6 @@
             "css": ["style/content.css"]
         }
     ],
-    "options_page": "options/options.html",
     "web_accessible_resources": [
         {
             "resources": ["images/*"],
