@@ -467,8 +467,28 @@ select {
     gap: 20px;
 }
 
+/* Back Button Styling */
+.backButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.back-button {
+    width: 30px;
+    height: 30px;
+    background-image: url('../assets/icons/back-button.png');
+    background-color: var(--button-background-color);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
 /* Modal Styling */
 .modal {
+    margin-top: 20px;
     background-color: var(--modal-background-color);
     border-radius: 10px;
     padding: 20px;

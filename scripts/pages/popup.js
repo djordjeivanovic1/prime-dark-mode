@@ -29,13 +29,3 @@ document.getElementById('settingsButton').addEventListener('click', () => {
 document.getElementById('addThemeButton').addEventListener('click', () => {
     window.location.href = '../popup/add-theme.html';
 });
-
-
-function addThemeCard(name, className) {
-    const container = document.getElementById('themeContainer');
-    const card = document.createElement('div');
-    card.className = 'theme-card';
-    card.innerHTML = `<div class="theme-preview ${className}"></div><div class="theme-title">${name}</div>`;
-    container.appendChild(card);
-}
-
