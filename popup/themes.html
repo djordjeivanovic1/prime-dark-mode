@@ -4,29 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Themes Page</title>
-    <link rel="stylesheet" href="../style/themes.css">
+    <link rel="stylesheet" href="../style/popup.css">
 </head>
-<body>
-    <div class="theme-container" id="themeContainer">
-        <div class="theme-card selected">
-            <div class="theme-preview deep-contrast"></div>
-            <div class="theme-title">Deep Contrast</div>
+<body id="themes-body">
+    <div id="theme-container">
+
+         <!-- LOGO IN THE HEADER -->
+         <div class="header">
+            <img src="../assets/logos/front_logo.png" alt="Prime Dark Mode">
         </div>
-        <div class="theme-card">
-            <div class="theme-preview monochrome"></div>
-            <div class="theme-title">Monochrome</div>
+
+        <!-- OPTION BUTTONS -->
+        <div class="options">
+            <div class="button-group-container">
+                <div class="button-group">
+                    <button class="button" id="filtersButton">Filters</button>
+                    <button class="button" id="themesButton">Themes</button>
+                    <button class="button" id="settingsButton">Settings</button>
+                </div>
+            </div>
         </div>
-        <div class="theme-card">
-            <div class="theme-preview sepia"></div>
-            <div class="theme-title">Sepia</div>
+
+        <!-- THEMES CARDS -->
+        <div class="theme-container">
+            <div class="theme-card selected">
+                <div class="theme-preview deep-contrast"></div>
+                <div class="theme-title">Deep Contrast</div>
+            </div>
+            <div class="theme-card">
+                <div class="theme-preview monochrome"></div>
+                <div class="theme-title">Monochrome</div>
+            </div>
+            <div class="theme-card">
+                <div class="theme-preview sepia"></div>
+                <div class="theme-title">Sepia</div>
+            </div>
+            <div class="theme-card">
+                <div class="theme-preview ivana-test"></div>
+                <div class="theme-title">Ivana Test</div>
+            </div>
         </div>
-        <div class="theme-card">
-            <div class="theme-preview ivana-test"></div>
-            <div class="theme-title">Ivana Test <span class="edit-icon">✎</span></div>
+
+        <!-- NAVIGATION BUTTONS TO WEBSITES PAGE AND APPLY THEME FUNCTION -->
+        <div class="button-container">
+            <button class="apply-btn">Apply theme</button>
+            <button class="websites-btn">Websites</button>
         </div>
     </div>
-    <button class="apply-btn" onclick="applyTheme()">Apply selected theme</button>
-    <button class="websites-btn" onclick="openWebsites()">Websites</button>
 
     <script src="../scripts/themes.js"></script>
 </body>

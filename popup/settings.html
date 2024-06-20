@@ -4,57 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings Page</title>
-    <link rel="stylesheet" href="../style/settings.css">
+    <link rel="stylesheet" href="../style/popup.css">
 </head>
 <body>
     <div class="settings-container">
-        <h2>Set active hours</h2>
+        <h2>Set Active Hours</h2>
         <label class="switch">
             <input type="checkbox" id="activeHoursToggle">
             <span class="slider round"></span>
         </label>
         <div class="time-settings" id="timeSettings">
-            <select id="startTimeHour">
-                <!-- Hours options -->
-                <option>06</option>
-                <!-- ... other options ... -->
-            </select>
-            :
-            <select id="startTimeMinute">
-                <!-- Minutes options -->
-                <option>00</option>
-                <!-- ... other options ... -->
-            </select>
-            <select id="startTimePeriod">
-                <option>PM</option>
-                <!-- ... other options ... -->
-            </select>
+            <select id="startTimeHour"></select> :
+            <select id="startTimeMinute"></select>
+            <select id="startTimePeriod"></select>
             <span class="to">↔</span>
-            <select id="endTimeHour">
-                <!-- Hours options -->
-                <option>09</option>
-                <!-- ... other options ... -->
-            </select>
-            :
-            <select id="endTimeMinute">
-                <!-- Minutes options -->
-                <option>00</option>
-                <!-- ... other options ... -->
-            </select>
-            <select id="endTimePeriod">
-                <option>AM</option>
-                <!-- ... other options ... -->
-            </select>
+            <select id="endTimeHour"></select> :
+            <select id="endTimeMinute"></select>
+            <select id="endTimePeriod"></select>
         </div>
 
-        <h2>Use system settings</h2>
+        <h2>Use System Settings</h2>
         <p>Activate extension only when system is in dark mode</p>
         <label class="switch">
             <input type="checkbox" id="systemSettingsToggle">
             <span class="slider round"></span>
         </label>
-
-        <h2>Extension shortcut</h2>
+        
+        <h2>Extension Shortcut</h2>
         <p>Set shortcut to toggle extension on/off</p>
         <label class="switch">
             <input type="checkbox" id="shortcutToggle">
@@ -64,21 +40,9 @@
             <div class="shortcut-key">⌘⇧D</div>
         </div>
 
-        <button class="save-btn" onclick="saveSettings()">Save settings</button>
+        <button class="save-btn" onclick="saveSettings()">Save Settings</button>
     </div>
 
-    <script>
-        document.getElementById('activeHoursToggle').addEventListener('change', function() {
-            document.getElementById('timeSettings').style.display = this.checked ? 'block' : 'none';
-        });
-
-        document.getElementById('shortcutToggle').addEventListener('change', function() {
-            document.getElementById('shortcutSettings').style.display = this.checked ? 'block' : 'none';
-        });
-
-        function saveSettings() {
-            alert('Settings saved!');
-        }
-    </script>
+    <script src="../scripts/settings.js"></script>
 </body>
 </html>

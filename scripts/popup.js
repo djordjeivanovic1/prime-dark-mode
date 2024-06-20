@@ -1,3 +1,4 @@
+//  Slider values adjustment based on user input
 document.getElementById('brightnessSlider').addEventListener('input', function() {
     document.getElementById('brightnessValue').textContent = this.value;
 });
@@ -11,25 +12,8 @@ document.getElementById('greyscaleSlider').addEventListener('input', function() 
     document.getElementById('greyscaleValue').textContent = this.value;
 });
 
-function openAddTheme() {
-    const popup = window.open("add-theme.html", "Add Theme", "width=400,height=300");
-    popup.onpageshow = () => {
-        const newTheme = JSON.parse(localStorage.getItem('newTheme'));
-        if (newTheme) {
-            addThemeCard(newTheme.name, newTheme.className);
-            localStorage.removeItem('newTheme');
-        }
-    };
-}
 
-function addThemeCard(name, className) {
-    const container = document.getElementById('themeContainer');
-    const card = document.createElement('div');
-    card.className = 'theme-card';
-    card.innerHTML = `<div class="theme-preview ${className}"></div><div class="theme-title">${name}</div>`;
-    container.appendChild(card);
-}
-
+// Button event listeners and routers
 document.getElementById('filtersButton').addEventListener('click', () => {
     window.location.href = '../popup/popup.html';
 });
@@ -41,3 +25,17 @@ document.getElementById('themesButton').addEventListener('click', () => {
 document.getElementById('settingsButton').addEventListener('click', () => {
     window.location.href = '../popup/settings.html';
 });
+
+document.getElementById('addThemeButton').addEventListener('click', () => {
+    window.location.href = '../popup/add-theme.html';
+});
+
+
+function addThemeCard(name, className) {
+    const container = document.getElementById('themeContainer');
+    const card = document.createElement('div');
+    card.className = 'theme-card';
+    card.innerHTML = `<div class="theme-preview ${className}"></div><div class="theme-title">${name}</div>`;
+    container.appendChild(card);
+}
+
