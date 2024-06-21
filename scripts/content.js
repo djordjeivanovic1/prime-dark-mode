@@ -44,3 +44,5 @@ chrome.storage.sync.get(["filters", "darkMode", "darkModeForWebsite"], (data) =>
         toggleDarkMode(true);
     }
 });
+
+

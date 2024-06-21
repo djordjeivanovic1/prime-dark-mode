@@ -18,6 +18,23 @@ chrome.runtime.onInstalled.addListener(async () => {
     }
 });
 
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tab.url) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0] && tabs[0].id === tabId) {
+                const urlObj = new URL(tab.url);
+                const hostname = urlObj.hostname;
+
+                if (forbiddenHosts.includes(hostname)) {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabId },
+                        function: insertAlert
+                    });
+                }
+            }
+        });
+    }
+});
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "saveFilters") {
@@ -25,6 +42,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({ status: "Filters saved" });
         });
         return true; // Indicate that we will respond asynchronously
+
+    
     } else if (request.action === "getFilters") {
         chrome.storage.sync.get("filters", (data) => {
             sendResponse(data.filters);
@@ -84,3 +103,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
     }
 });
+
+// Insert Alert Function
+function insertAlert() {
+    const alertBox = document.getElementById('alertBox');
+    if (alertBox) {
+        // Create alert title
+        const alertTitle = document.createElement("h4");
+        alertTitle.style.fontSize = "20px";
+        alertTitle.style.color = "red";
+        alertTitle.style.textAlign = "center";
+        alertTitle.style.fontWeight = "bold";
+        alertTitle.style.marginTop = "10px";
+        alertTitle.style.marginBottom = "10px";
+        alertTitle.innerText = "This website is forbidden for modification";
+
+        // Create alert description
+        const description = document.createElement("p");
+        description.style.fontSize = "14px";
+        description.style.color = "white";
+        description.style.textAlign = "center";
+        description.style.fontWeight = "semi-bold";
+        description.style.marginTop = "10px";
+        description.style.marginBottom = "10px";
+        description.innerText = "Some websites do not allow any modification to their content. Please try another website.";
+
+        // Clear previous content and append new elements
+        alertBox.innerHTML = '';
+        alertBox.appendChild(alertTitle);
+        alertBox.appendChild(description);
+    }
+}
