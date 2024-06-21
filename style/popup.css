@@ -305,7 +305,7 @@ input[type="range"] {
 }
 
 /* Buttons Styling Themes Page */
-.apply-btn, .websites-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton {
+.apply-btn, .websites-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton, #clearAllSettingsButton{
     background-color: var(--button-background-color); 
     border: none;
     border-radius: 15px;

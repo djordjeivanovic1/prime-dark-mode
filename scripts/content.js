@@ -1,4 +1,4 @@
-// Function to apply filters to the webpage
+// Function to apply filters
 function applyFilters(filters) {
     const filterString = `
         brightness(${filters.brightness}%) 
@@ -9,7 +9,7 @@ function applyFilters(filters) {
     document.documentElement.style.filter = filterString.trim();
 }
 
-// Function to toggle dark mode on the webpage
+// Function to toggle dark mode
 function toggleDarkMode(enable) {
     if (enable) {
         document.documentElement.classList.add("dark-mode");
@@ -18,7 +18,7 @@ function toggleDarkMode(enable) {
     }
 }
 
-// Listen for messages from the background script
+// Listener for messages from the background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "applyFilters") {
         applyFilters(request.filters);
@@ -29,7 +29,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Apply saved filters and dark mode when the content script is loaded
+// Retrieve and apply stored settings on load
 chrome.storage.sync.get(["filters", "darkMode", "darkModeForWebsite"], (data) => {
     if (data.filters) {
         applyFilters(data.filters);
@@ -44,5 +44,3 @@ chrome.storage.sync.get(["filters", "darkMode", "darkModeForWebsite"], (data) =>
         toggleDarkMode(true);
     }
 });
-
-
