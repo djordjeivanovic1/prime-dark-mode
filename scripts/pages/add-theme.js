@@ -7,10 +7,10 @@ document.getElementById('addThemeForm').addEventListener('submit', function(even
     const themeName = document.getElementById('addThemeName').value;
     const filters = JSON.parse(localStorage.getItem('currentFilters'));
 
-    chrome.storage.sync.get(['themes'], function(data) {
+    chrome.storage.local.get(['themes'], function(data) {
         const themes = data.themes || {};
         themes[themeName] = filters;
-        chrome.storage.sync.set({ themes: themes }, function() {
+        chrome.storage.local.set({ themes: themes }, function() {
             alert('Theme saved!');
             window.location.href = '../popup/themes.html';
         });
@@ -25,11 +25,11 @@ document.getElementById('editThemeForm').addEventListener('submit', function(eve
     const themeName = document.getElementById('theme-title').value;
     const filters = JSON.parse(localStorage.getItem('currentFilters'));
 
-    chrome.storage.sync.get(['themes'], function(data) {
+    chrome.storage.local.get(['themes'], function(data) {
         const themes = data.themes || {};
         if (themes[themeName]) {
             themes[themeName] = filters;
-            chrome.storage.sync.set({ themes: themes }, function() {
+            chrome.storage.local.set({ themes: themes }, function() {
                 alert('Theme updated!');
                 window.location.href = '../popup/themes.html';
             });
@@ -40,7 +40,7 @@ document.getElementById('editThemeForm').addEventListener('submit', function(eve
 });
 
 // Load existing themes into the dropdown for editing
-chrome.storage.sync.get(['themes'], function(data) {
+chrome.storage.local.get(['themes'], function(data) {
     const themes = data.themes || {};
     const themeSelect = document.getElementById('themeSelect');
     themeSelect.innerHTML = '<option value="">Select Theme to Edit</option>';

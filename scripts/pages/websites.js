@@ -40,7 +40,7 @@ document.head.appendChild(style);
 
 
 function loadWebsites() {
-    chrome.storage.sync.get(['themes', 'darkModeForWebsite'], function(data) {
+    chrome.storage.local.get(['themes', 'darkModeForWebsite'], function(data) {
         const themes = data.themes || {};
         const darkModeForWebsite = data.darkModeForWebsite || {};
         const websitesList = document.getElementById('websitesList');
@@ -83,13 +83,13 @@ function loadWebsites() {
 }
 
 function editWebsite(domain) {
-    chrome.storage.sync.set({ editingDomain: domain }, function() {
+    chrome.storage.local.set({ editingDomain: domain }, function() {
         window.location.href = '../popup/popup.html';
     });
 }
 
 function toggleWebsite(domain, enabled) {
-    chrome.storage.sync.get(['darkModeForWebsite'], function(data) {
+    chrome.storage.local.get(['darkModeForWebsite'], function(data) {
         const darkModeForWebsite = data.darkModeForWebsite || {};
 
         if (enabled) {
@@ -98,7 +98,7 @@ function toggleWebsite(domain, enabled) {
             delete darkModeForWebsite[domain];
         }
 
-        chrome.storage.sync.set({ darkModeForWebsite: darkModeForWebsite }, function() {
+        chrome.storage.local.set({ darkModeForWebsite: darkModeForWebsite }, function() {
             console.log('Website filter toggled');
         });
     });

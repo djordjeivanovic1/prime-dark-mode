@@ -24,12 +24,12 @@ function selectTheme(name, className) {
 }
 
 function applyTheme() {
-    chrome.storage.sync.get(['themes'], function(data) {
+    chrome.storage.local.get(['themes'], function(data) {
         const themes = data.themes || {};
         const themeFilters = themes[selectedTheme.name];
 
         if (themeFilters) {
-            chrome.storage.sync.set({ filters: themeFilters }, function() {
+            chrome.storage.local.set({ filters: themeFilters }, function() {
                 chrome.runtime.sendMessage({
                     action: "applyThemeFilters",
                     filters: themeFilters
@@ -60,7 +60,7 @@ function applyFiltersToCurrentPage(filters) {
 
 // theme card click event listener
 document.querySelector('.apply-btn').addEventListener('click', applyTheme);
-chrome.storage.sync.get(['themes'], function(data) {
+chrome.storage.local.get(['themes'], function(data) {
     const themes = data.themes || {};
     const themeContainer = document.querySelector('.theme-container');
     themeContainer.innerHTML = '';

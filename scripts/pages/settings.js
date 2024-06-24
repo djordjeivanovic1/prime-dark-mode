@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     populateSelect(endTimePeriod, periods);
 
     // Load settings from storage
-    chrome.storage.sync.get(['activeHours', 'useSystemSettings', 'extensionShortcut', 'extensionActive'], function(data) {
+    chrome.storage.local.get(['activeHours', 'useSystemSettings', 'extensionShortcut', 'extensionActive'], function(data) {
         const activeHours = data.activeHours || {};
         const useSystemSettings = data.useSystemSettings || false;
         const extensionShortcut = data.extensionShortcut || false;
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const extensionShortcut = document.getElementById('shortcutToggle').checked;
         const extensionActive = document.getElementById('extensionToggle').checked;
 
-        chrome.storage.sync.set({
+        chrome.storage.local.set({
             activeHours: activeHours,
             useSystemSettings: useSystemSettings,
             extensionShortcut: extensionShortcut,
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Extension activation toggle
     document.getElementById('extensionToggle').addEventListener('change', function() {
         const active = this.checked;
-        chrome.storage.sync.set({ extensionActive: active }, function() {
+        chrome.storage.local.set({ extensionActive: active }, function() {
             if (!active) {
             
                 chrome.runtime.sendMessage({ action: 'clearAllFilters' });

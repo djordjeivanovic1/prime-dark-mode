@@ -12,7 +12,7 @@ function applyFilters(filters) {
     document.documentElement.style.filter = filterString.trim();
 }
 
-chrome.storage.sync.get(["filters"], (data) => {
+chrome.storage.local.get(["filters"], (data) => {
     if (data.filters) {
         applyFilters(data.filters);
     }
@@ -31,42 +31,26 @@ function toggleDarkMode(darkModeOn) {
     }
 }
 
-// Listen for messages from the extension
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === 'toggleDarkMode') {
-        toggleDarkMode(request.darkMode);
-        sendResponse({ success: true });
+// Apply initial dark mode state from storage
+chrome.storage.local.get(["darkMode"], (data) => {
+    if (data.darkMode !== undefined) {
+        toggleDarkMode(data.darkMode);
     }
 });
 
-//////////////////////////////////////////////////  
-// LISTENS FROM MESSAGES FROM BACKGROUND SCRIPT //
+//////////////////////////////////////////////////
+// LISTEN FOR MESSAGES FROM BACKGROUND SCRIPT   //
 //////////////////////////////////////////////////
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'toggleDarkMode') {
-        applyDarkMode(request.darkMode);
+        toggleDarkMode(request.darkMode);
         sendResponse({ success: true });
-
     } else if (request.action === "applyFilters") {
         applyFilters(request.filters);
         sendResponse({ success: true });
-    }
-});
-
-
-////////////////////////////////
-// CLEAR FILTERS AND SETTINGS //
-////////////////////////////////
-
-// Function to clear all filters
-
-
-// Listen for messages from the background or popup script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "clearAllFilters") {
+    } else if (request.action === "clearAllFilters") {
         clearAllFilters();
         sendResponse({ status: "filters_cleared" });
     }
-  
 });
