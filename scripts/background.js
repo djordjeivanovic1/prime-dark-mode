@@ -5,32 +5,35 @@ chrome.runtime.onInstalled.addListener(async () => {
     chrome.storage.sync.set({ filters: {}, darkMode: false, darkModeForWebsite: {}, themes: {}, activeHours: {}, useSystemSettings: false, extensionShortcut: false, extensionActive: true });
 
     // Inject content scripts into all matching tabs
-    for (const cs of chrome.runtime.getManifest().content_scripts) {
-        for (const tab of await chrome.tabs.query({ url: cs.matches })) {
-            if (tab.url.match(/(chrome|chrome-extension):\/\//gi)) {
-                continue;
+    const manifest = chrome.runtime.getManifest();
+    const contentScripts = manifest.content_scripts || [];
+    
+    for (const cs of contentScripts) {
+        const tabs = await chrome.tabs.query({ url: cs.matches });
+        for (const tab of tabs) {
+            if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+                chrome.scripting.executeScript({
+                    files: cs.js,
+                    target: { tabId: tab.id, allFrames: cs.all_frames },
+                    injectImmediately: cs.run_at === 'document_start',
+                    world: cs.world
+                });
             }
-            chrome.scripting.executeScript({
-                files: cs.js,
-                target: { tabId: tab.id, allFrames: cs.all_frames },
-                injectImmediately: cs.run_at === 'document_start',
-                world: cs.world
-            });
         }
     }
+    
     // Set alarms for active hours
     updateAlarms();
 });
 
-
 chrome.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === 'startActiveHours') {
-        chrome.storage.sync.set({ extensionActive: true }, function() {
+        chrome.storage.sync.set({ extensionActive: true }, () => {
             applySettingsToAllTabs();
             console.log('Extension activated during active hours.');
         });
     } else if (alarm.name === 'endActiveHours') {
-        chrome.storage.sync.set({ extensionActive: false }, function() {
+        chrome.storage.sync.set({ extensionActive: false }, () => {
             clearAllFilters();
             console.log('Extension deactivated outside active hours.');
         });
@@ -38,19 +41,19 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 function updateAlarms() {
-    chrome.storage.sync.get(['activeHours'], function(data) {
+    chrome.storage.sync.get('activeHours', (data) => {
         const activeHours = data.activeHours || {};
         if (activeHours.enabled) {
             const start = convertTo24Hour(activeHours.startHour, activeHours.startMinute, activeHours.startPeriod);
             const end = convertTo24Hour(activeHours.endHour, activeHours.endMinute, activeHours.endPeriod);
 
-            chrome.alarms.clearAll(function() {
+            chrome.alarms.clearAll(() => {
                 chrome.alarms.create('startActiveHours', { when: start });
                 chrome.alarms.create('endActiveHours', { when: end });
                 console.log('Alarms set for active hours.');
             });
         } else {
-            chrome.alarms.clearAll(function() {
+            chrome.alarms.clearAll(() => {
                 console.log('Active hours disabled, all alarms cleared.');
             });
         }
@@ -58,11 +61,15 @@ function updateAlarms() {
 }
 
 function convertTo24Hour(hour, minute, period) {
-    if (period === 'PM' && hour !== '12') {
-        hour = parseInt(hour) + 12;
-    } else if (period === 'AM' && hour === '12') {
+    hour = parseInt(hour, 10);
+    minute = parseInt(minute, 10);
+
+    if (period === 'PM' && hour !== 12) {
+        hour += 12;
+    } else if (period === 'AM' && hour === 12) {
         hour = 0;
     }
+
     const now = new Date();
     now.setHours(hour, minute, 0, 0);
     return now.getTime();
@@ -208,7 +215,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const activeTab = tabs[0];
                 chrome.scripting.executeScript({
                     target: { tabId: activeTab.id },
-                    function: applyFiltersToCurrentPage,
+                    func: applyFiltersToCurrentPage,
                     args: [filters]
                 }, () => {
                     sendResponse({ status: "Filters applied" });
