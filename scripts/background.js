@@ -1,10 +1,30 @@
+// CONSTANTS
 const forbiddenSchemes = ["chrome://", "edge://", "about:", "file://"];
 
+// INITIALIZE STORAGE ITEMS AND CONTENT SCRIPTS
 chrome.runtime.onInstalled.addListener(async () => {
     // Set initial values in storage
-    chrome.storage.sync.set({ filters: {}, darkMode: false, darkModeForWebsite: {}, themes: {}, activeHours: {}, useSystemSettings: false, extensionShortcut: false, extensionActive: true });
+    chrome.storage.sync.set({ 
+        // filter values
+        filters: {},
 
-    // Inject content scripts into all matching tabs
+        // dark mode on/off
+        darkMode: false, 
+
+        // theme filter values
+        themes: {}, 
+
+        // active hours for current theme
+        activeHours: {}, 
+
+        // extension settings
+        useSystemSettings: false, 
+        extensionShortcut: false
+    });
+
+    // Inject content scripts into all matching tabs - this is necessary because the content 
+    //script is not injected into tabs that are already open when the extension is installed
+
     const manifest = chrome.runtime.getManifest();
     const contentScripts = manifest.content_scripts || [];
     
@@ -21,99 +41,52 @@ chrome.runtime.onInstalled.addListener(async () => {
             }
         }
     }
-    
-    // Set alarms for active hours
-    updateAlarms();
+
+    applySettings();
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === 'startActiveHours') {
-        chrome.storage.sync.set({ extensionActive: true }, () => {
-            applySettingsToAllTabs();
-            console.log('Extension activated during active hours.');
-        });
-    } else if (alarm.name === 'endActiveHours') {
-        chrome.storage.sync.set({ extensionActive: false }, () => {
-            clearAllFilters();
-            console.log('Extension deactivated outside active hours.');
-        });
-    }
+// STARTUP SETTINGS
+chrome.runtime.onStartup.addListener(() => {
+    applySettings();
 });
 
-function updateAlarms() {
-    chrome.storage.sync.get('activeHours', (data) => {
-        const activeHours = data.activeHours || {};
-        if (activeHours.enabled) {
-            const start = convertTo24Hour(activeHours.startHour, activeHours.startMinute, activeHours.startPeriod);
-            const end = convertTo24Hour(activeHours.endHour, activeHours.endMinute, activeHours.endPeriod);
+//////////////////////
+// HELPER FUNCTIONS //
+//////////////////////
 
-            chrome.alarms.clearAll(() => {
-                chrome.alarms.create('startActiveHours', { when: start });
-                chrome.alarms.create('endActiveHours', { when: end });
-                console.log('Alarms set for active hours.');
-            });
-        } else {
-            chrome.alarms.clearAll(() => {
-                console.log('Active hours disabled, all alarms cleared.');
-            });
-        }
-    });
-}
 
-function convertTo24Hour(hour, minute, period) {
-    hour = parseInt(hour, 10);
-    minute = parseInt(minute, 10);
-
-    if (period === 'PM' && hour !== 12) {
-        hour += 12;
-    } else if (period === 'AM' && hour === 12) {
-        hour = 0;
-    }
-
-    const now = new Date();
-    now.setHours(hour, minute, 0, 0);
-    return now.getTime();
-}
-
-function applySettingsToAllTabs() {
+function applySettings() {
     chrome.tabs.query({}, (tabs) => {
         tabs.forEach((tab) => {
-            if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-                chrome.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    files: ['content.js']
-                }, () => {
-                    chrome.storage.sync.get(["filters", "darkMode", "darkModeForWebsite"], (data) => {
-                        if (data.filters) {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: "applyFilters",
-                                filters: data.filters
-                            });
-                        }
-
-                        if (data.darkMode) {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: "toggleDarkMode",
-                                darkMode: data.darkMode
-                            });
-                        }
-
-                        const urlObj = new URL(tab.url);
-                        const darkModeForWebsite = data.darkModeForWebsite || {};
-                        if (darkModeForWebsite[urlObj.hostname]) {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: "toggleDarkModeForWebsite",
-                                enable: true
-                            });
-                        }
-                    });
+            chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['content.js']
+            }, () => {
+                // get filters and dark mode settings from storage
+                chrome.storage.local.get("filters", "darkMode", (data) => {
+                    if (data.filters) {
+                        // send message to content script to apply filters
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "applyFilters",
+                            filters: data.filters
+                        });
+                    }
+                    // send message to content script to toggle dark mode
+                    if (data.darkMode) {
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "toggleDarkMode",
+                            darkMode: data.darkMode
+                        });
+                    }
                 });
-            }
+            });
+            
         });
     });
 }
 
-function clearAllFilters() {
+
+function clearAllFiltersApplied() {
     chrome.tabs.query({}, (tabs) => {
         tabs.forEach((tab) => {
             if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
@@ -130,20 +103,30 @@ function clearAllFilters() {
     });
 }
 
+//////////////////////
+// MESSGAE HANDLERS //
+//////////////////////
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
     if (request.action === "saveFilters") {
-        chrome.storage.sync.set({ filters: request.filters }, () => {
+        chrome.storage.local.set({ filters: request.filters }, () => {
             sendResponse({ status: "Filters saved" });
         });
-        return true; // Indicate that we will respond asynchronously
-    } else if (request.action === "getFilters") {
-        chrome.storage.sync.get("filters", (data) => {
+        return true; 
+    } 
+    
+    
+    else if (request.action === "getFilters") {
+        chrome.storage.local.get("filters", (data) => {
             sendResponse(data.filters);
         });
         return true;
-    } else if (request.action === "applyFilters") {
+    } 
+    
+    else if (request.action === "applyFilters") {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0] && !forbiddenSchemes.some(scheme => tabs[0].url.startsWith(scheme))) {
+            if (tabs[0]) {
                 chrome.scripting.executeScript({
                     target: { tabId: tabs[0].id },
                     files: ['content.js']
@@ -155,6 +138,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
+
+    
     } else if (request.action === "toggleDarkMode") {
         chrome.storage.sync.set({ darkMode: request.enable }, () => {
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -171,6 +156,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
             });
         });
+
+    // toggle the dark mode for a specific website
     } else if (request.action === "toggleDarkModeForWebsite") {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0] && !forbiddenSchemes.some(scheme => tabs[0].url.startsWith(scheme))) {
@@ -192,11 +179,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
+
+    // clear all filters on a specific website
+    } else if (request.action === "clearAllFilters") {
+        clearAllFilters();
+        // On click, all settings cleared from storage
     } else if (request.action === "clearAllSettings") {
-        chrome.storage.sync.set({ filters: {}, darkMode: false, darkModeForWebsite: {}, themes: {} }, () => {
+        chrome.storage.sync.set({ url, darkMode: false, themes: {}}, () => {
             sendResponse({ status: "All settings cleared" });
         });
         return true;
+
+    // get information about the currently active tab
     } else if (request.action === "getActiveTabInfo") {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs.length > 0) {
@@ -208,64 +202,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
         return true;
-    } else if (request.action === "applyThemeFilters") {
-        const { filters } = request;
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs.length > 0) {
-                const activeTab = tabs[0];
-                chrome.scripting.executeScript({
-                    target: { tabId: activeTab.id },
-                    func: applyFiltersToCurrentPage,
-                    args: [filters]
-                }, () => {
-                    sendResponse({ status: "Filters applied" });
-                });
-            } else {
-                sendResponse({ error: "No active tab found" });
-            }
-        });
-        return true;
     }
+
 });
-
-// Function to apply filters in the content script context
-function applyFiltersToCurrentPage(filters) {
-    const filterString = `
-        brightness(${filters.brightness}%) 
-        contrast(${filters.contrast}%) 
-        sepia(${filters.sepia}%) 
-        grayscale(${filters.greyscale}%)
-    `;
-    document.documentElement.style.filter = filterString.trim();
-}
-
-// Insert Alert Function
-function insertAlert() {
-    const alertBox = document.getElementById('alertBox');
-    if (alertBox) {
-        // Create alert title
-        const alertTitle = document.createElement("h4");
-        alertTitle.style.fontSize = "20px";
-        alertTitle.style.color = "red";
-        alertTitle.style.textAlign = "center";
-        alertTitle.style.fontWeight = "bold";
-        alertTitle.style.marginTop = "10px";
-        alertTitle.style.marginBottom = "10px";
-        alertTitle.innerText = "This website is forbidden for modification";
-
-        // Create alert description
-        const description = document.createElement("p");
-        description.style.fontSize = "14px";
-        description.style.color = "white";
-        description.style.textAlign = "center";
-        description.style.fontWeight = "semi-bold";
-        description.style.marginTop = "10px";
-        description.style.marginBottom = "10px";
-        description.innerText = "Some websites do not allow any modification to their content. Please try another website.";
-
-        // Clear previous content and append new elements
-        alertBox.innerHTML = '';
-        alertBox.appendChild(alertTitle);
-        alertBox.appendChild(description);
-    }
-}
