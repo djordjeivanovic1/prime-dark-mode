@@ -5,14 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Theme</title>
     <link rel="stylesheet" href="../style/popup.css">
+    <style>
+        .theme-card {
+            border: 2px solid transparent;
+            padding: 10px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .theme-card.selected {
+            border-color: blue;
+        }
+    </style>
 </head>
 <body>
     <div class="add-theme-container">
         <div class="backButton" id="backButton">
-            <button class="back-button"></button>
+            <button class="back-button">Back</button>
         </div>
        
-        <!-- ADD THEME MODEL -->
+        <!-- ADD THEME MODAL -->
         <div class="modal" id="addThemeModal">
             <div class="modal-header">
                 <h2>Save as theme</h2>
@@ -30,8 +41,10 @@
                 <h2>Edit theme</h2>
             </div>
             <form id="editThemeForm">
-                <label for="editThemeName">Theme Name:</label>
-                <input type="text" id="editThemeName" name="editThemeName" value="Ivana Test" required>
+                <label for="themeSelect">Select Theme to Edit:</label>
+                <select id="themeSelect" name="themeSelect" required>
+                    <option value="">Select Theme</option>
+                </select>
                 <button type="submit">Save settings</button>
             </form>
         </div>

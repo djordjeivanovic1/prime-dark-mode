@@ -69,7 +69,7 @@ function applyDarkMode(tabId, darkModeOn) {
 
 function toggleDarkMode(darkModeOn, tabId) {
     chrome.storage.local.set({ darkMode: darkModeOn }, () => {
-        applyDarkMode(tabId, !darkModeOn);
+        applyDarkMode(tabId, darkModeOn);
     });
 }
 
@@ -125,16 +125,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event listener for "Save as Theme" button
-    document.getElementById('addThemeButton').addEventListener('click', function() {
-        chrome.storage.local.get(['filters'], function(data) {
-            // Store current filters in localStorage to be accessed in add-theme.html
-            localStorage.setItem('currentFilters', JSON.stringify(data.filters));
-            // Open the add-theme.html page
-            window.location.href = '../popup/add-theme.html';
-        });
-    });
-
     // Save settings button
     document.getElementById('saveSettingsButton').addEventListener('click', () => {
         const filters = {
@@ -179,6 +169,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     toggleCurrentWebsiteDarkMode(darkModeOn, tabId);
                 });
             });
+        });
+    });
+
+    // Event listener for "Save as Theme" button
+    document.getElementById('addThemeButton').addEventListener('click', function() {
+        chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
+            if (response.error) {
+                console.error(response.error);
+            } else {
+                const { hostname } = response;
+                chrome.storage.local.get(['filters'], function(data) {
+                    const currentFilters = data.filters[hostname] || {};
+                    chrome.storage.local.set({ currentFilters: currentFilters }, function() {
+                        // Redirect to add-theme.html after setting the filters
+                        window.location.href = 'add-theme.html';
+                    });
+                });
+            }
         });
     });
 

@@ -2,42 +2,17 @@ document.getElementById('backButton').addEventListener('click', () => {
     window.location.href = '../popup/popup.html';
 });
 
-document.getElementById('editButton').addEventListener('click', () => {
-    editWebsite();
-});
-
-function editWebsite() {
-    alert('Edit website functionality to be implemented');
+function clearAllWebsites() {
+    chrome.storage.local.set({ darkModeForWebsite: {} }, function() {
+        loadWebsites();
+    });
 }
 
-document.querySelectorAll('.website-card').forEach(card => {
-    card.addEventListener('click', (event) => {
-        if (!event.target.classList.contains('edit-btn') && !event.target.classList.contains('website-checkbox')) {
-            if (card.classList.contains('selected')) {
-                // If the card is already selected, deselect it
-                card.classList.remove('selected');
-            } else {
-                // Deselect any currently selected card
-                document.querySelectorAll('.website-card.selected').forEach(selectedCard => {
-                    selectedCard.classList.remove('selected');
-                });
-                card.classList.add('selected');
-            }
-        }
+function editWebsite(domain) {
+    chrome.storage.local.set({ editingDomain: domain }, function() {
+        window.location.href = '../popup/add-theme.html';
     });
-});
-
-const style = document.createElement('style');
-style.innerHTML = `
-    .website-card.selected {
-        border-color: var(--button-background-color);
-        box-shadow: 0 0 10px var(--button-background-color);
-    }
-`;
-
-document.head.appendChild(style);
-
-
+}
 
 function loadWebsites() {
     chrome.storage.local.get(['themes', 'darkModeForWebsite'], function(data) {
@@ -45,7 +20,7 @@ function loadWebsites() {
         const darkModeForWebsite = data.darkModeForWebsite || {};
         const websitesList = document.getElementById('websitesList');
 
-        websitesList.innerHTML = ''; // Clear the list
+        websitesList.innerHTML = '';
 
         Object.keys(darkModeForWebsite).forEach(domain => {
             const theme = themes[darkModeForWebsite[domain]];
@@ -60,7 +35,8 @@ function loadWebsites() {
                 <div class="website-actions">
                     <button class="edit-btn" data-domain="${domain}">Edit</button>
                     <div class="toggle">
-                        <input type="checkbox" class="website-toggle" data-domain="${domain}" ${darkModeForWebsite[domain] ? 'checked' : ''}>
+                        <label for="darkModeToggle-${domain}">Dark mode</label>
+                        <input type="checkbox" class="website-toggle" id="darkModeToggle-${domain}" ${darkModeForWebsite[domain] ? 'checked' : ''} data-domain="${domain}">
                     </div>
                 </div>
             `;
@@ -82,12 +58,6 @@ function loadWebsites() {
     });
 }
 
-function editWebsite(domain) {
-    chrome.storage.local.set({ editingDomain: domain }, function() {
-        window.location.href = '../popup/popup.html';
-    });
-}
-
 function toggleWebsite(domain, enabled) {
     chrome.storage.local.get(['darkModeForWebsite'], function(data) {
         const darkModeForWebsite = data.darkModeForWebsite || {};
@@ -100,7 +70,73 @@ function toggleWebsite(domain, enabled) {
 
         chrome.storage.local.set({ darkModeForWebsite: darkModeForWebsite }, function() {
             console.log('Website filter toggled');
+            applyDarkModeToDomain(domain, enabled);
         });
+    });
+}
+
+function applyDarkModeToDomain(domain, darkModeOn) {
+    chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+            const url = new URL(tab.url);
+            if (url.hostname === domain) {
+                applyDarkMode(tab.id, darkModeOn);
+            }
+        });
+    });
+}
+
+function applyDarkMode(tabId, darkModeOn) {
+    chrome.tabs.sendMessage(tabId, {
+        action: 'toggleDarkMode',
+        darkMode: darkModeOn
+    }, function(response) {
+        if (response && response.success) {
+            if (darkModeOn) {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'applyFilters',
+                    filters: {
+                        brightness: 50,
+                        contrast: 70,
+                        sepia: 0,
+                        greyscale: 30
+                    }
+                });
+            } else {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'applyFilters',
+                    filters: {
+                        brightness: 100,
+                        contrast: 100,
+                        sepia: 0,
+                        greyscale: 0
+                    }
+                });
+            }
+        }
+    });
+}
+
+function toggleDarkMode(darkModeOn, tabId) {
+    chrome.storage.local.set({ darkMode: darkModeOn }, () => {
+        applyDarkMode(tabId, darkModeOn);
+    });
+}
+
+function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
+    chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
+        if (response.error) {
+            console.error(response.error);
+        } else {
+            const { hostname } = response;
+            chrome.storage.local.get("currentWebsiteDarkMode", (data) => {
+                const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
+                currentWebsiteDarkMode[hostname] = darkModeOn;
+                chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkMode }, () => {
+                    applyDarkMode(tabId, darkModeOn);
+                });
+            });
+        }
     });
 }
 

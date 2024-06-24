@@ -39,11 +39,12 @@ document.addEventListener('DOMContentLoaded', function() {
     populateSelect(endTimePeriod, periods);
 
     // Load settings from storage
-    chrome.storage.local.get(['activeHours', 'useSystemSettings', 'extensionShortcut', 'extensionActive'], function(data) {
+    chrome.storage.local.get(['activeHours', 'useSystemSettings', 'extensionShortcut', 'extensionActive', 'filters'], function(data) {
         const activeHours = data.activeHours || {};
         const useSystemSettings = data.useSystemSettings || false;
         const extensionShortcut = data.extensionShortcut || false;
         const extensionActive = data.extensionActive || false;
+        const filters = data.filters || {};
 
         document.getElementById('setHoursToggle').checked = activeHours.enabled || false;
         startTimeHour.value = activeHours.startHour || '08';
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('extensionToggle').checked = extensionActive;
 
         document.getElementById('timeSettings').style.display = activeHours.enabled ? 'block' : 'none';
+
     });
 
     // Toggle visibility of time settings
@@ -105,8 +107,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const active = this.checked;
         chrome.storage.local.set({ extensionActive: active }, function() {
             if (!active) {
-            
                 chrome.runtime.sendMessage({ action: 'clearAllFilters' });
+            } else {
+                chrome.storage.local.get(['activeHours'], function(data) {
+                    const activeHours = data.activeHours || {};
+                    const now = new Date();
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+                    const currentPeriod = currentHour >= 12 ? 'PM' : 'AM';
+
+                    const startHour = parseInt(activeHours.startHour) % 12 + (activeHours.startPeriod === 'PM' ? 12 : 0);
+                    const endHour = parseInt(activeHours.endHour) % 12 + (activeHours.endPeriod === 'PM' ? 12 : 0);
+                    const isActive = (
+                        (currentHour > startHour || (currentHour === startHour && currentMinute >= parseInt(activeHours.startMinute))) &&
+                        (currentHour < endHour || (currentHour === endHour && currentMinute <= parseInt(activeHours.endMinute)))
+                    );
+
+                    if (isActive) {
+                        chrome.runtime.sendMessage({ action: 'applyAllFilters' });
+                    } else {
+                        chrome.runtime.sendMessage({ action: 'clearAllFilters' });
+                    }
+                });
             }
         });
     });

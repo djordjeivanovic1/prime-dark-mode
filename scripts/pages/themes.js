@@ -1,43 +1,66 @@
-document.getElementById('filtersButton').addEventListener('click', () => {
-    window.location.href = '../popup/popup.html';
-});
+let selectedTheme = null;
 
-document.getElementById('themesButton').addEventListener('click', () => {
-    window.location.href = '../popup/themes.html';
-});
+function selectTheme(themeCard, themeName) {
+    // Reset the style for all theme cards
+    document.querySelectorAll('.theme-card').forEach(card => {
+        card.style.border = '2px solid var(--border-color)';
+        card.style.boxShadow = 'none';
+        card.style.transform = 'scale(1)';
+    });
 
-document.getElementById('settingsButton').addEventListener('click', () => {
-    window.location.href = '../popup/settings.html';
-});
+    // Highlight the selected theme card
+    themeCard.style.border = '2px solid blue';
+    themeCard.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
+    themeCard.style.transform = 'scale(1.05)';
 
-document.getElementById('websiteButton').addEventListener('click', () => {
-    window.location.href = '../popup/websites.html';
-});
-
-let selectedTheme = { name: '', className: '' };
-
-// Function to select a theme
-function selectTheme(name, className) {
-    selectedTheme = { name, className };
-    document.querySelectorAll('.theme-card').forEach(card => card.classList.remove('selected'));
-    document.querySelector(`.theme-preview.${className}`).parentElement.classList.add('selected');
+    // Store the selected theme
+    selectedTheme = themeName;
 }
 
-function applyTheme() {
+document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.local.get(['themes'], function(data) {
         const themes = data.themes || {};
-        const themeFilters = themes[selectedTheme.name];
+        const themeContainer = document.querySelector('.theme-container');
+        themeContainer.innerHTML = '';
+
+        for (const themeName in themes) {
+            const className = themeName.replace(/\s+/g, '-').toLowerCase();
+            const themeCard = document.createElement('div');
+            themeCard.className = 'theme-card';
+            themeCard.dataset.themeName = themeName;
+            themeCard.innerHTML = `
+                <div class="theme-preview ${className}"></div>
+                <div class="theme-title">${themeName}</div>
+            `;
+            themeCard.addEventListener('click', () => selectTheme(themeCard, themeName));
+            themeContainer.appendChild(themeCard);
+        }
+
+        document.querySelector('.apply-btn').addEventListener('click', applyTheme);
+        document.querySelector('#websiteButton').addEventListener('click', function() {
+            window.location.href = '../../popup/websites.html';  
+        });
+    });
+});
+
+function applyTheme() {
+    if (!selectedTheme) {
+        alert('Please select a theme to apply.');
+        return;
+    }
+    chrome.storage.local.get(['themes'], function(data) {
+        const themes = data.themes || {};
+        const themeFilters = themes[selectedTheme];
 
         if (themeFilters) {
             chrome.storage.local.set({ filters: themeFilters }, function() {
+                console.log('Filters set:', themeFilters);  // Log the filters being set
                 chrome.runtime.sendMessage({
-                    action: "applyThemeFilters",
+                    action: "applyFilters",
                     filters: themeFilters
                 }, function(response) {
-                    if (response.status === "Filters applied") {
-                        alert('Theme applied!');
-                    } else {
-                        alert('Failed to apply theme.');
+                    if (response) {
+                        alert('Theme applied successfully.');
                     }
                 });
             });
@@ -46,34 +69,3 @@ function applyTheme() {
         }
     });
 }
-
-// Function to apply filters in the content script context
-function applyFiltersToCurrentPage(filters) {
-    const filterString = `
-        brightness(${filters.brightness}%) 
-        contrast(${filters.contrast}%) 
-        sepia(${filters.sepia}%) 
-        grayscale(${filters.greyscale}%)
-    `;
-    document.documentElement.style.filter = filterString.trim();
-}
-
-// theme card click event listener
-document.querySelector('.apply-btn').addEventListener('click', applyTheme);
-chrome.storage.local.get(['themes'], function(data) {
-    const themes = data.themes || {};
-    const themeContainer = document.querySelector('.theme-container');
-    themeContainer.innerHTML = '';
-
-    for (const [themeName, filters] of Object.entries(themes)) {
-        const themeCard = document.createElement('div');
-        themeCard.className = 'theme-card';
-        themeCard.innerHTML = `
-            <div class="theme-preview ${themeName.replace(/\s+/g, '-').toLowerCase()}"></div>
-            <div class="theme-title">${themeName}</div>
-        `;
-        themeCard.addEventListener('click', () => selectTheme(themeName, themeName.replace(/\s+/g, '-').toLowerCase()));
-        themeContainer.appendChild(themeCard);
-    }
-});
-

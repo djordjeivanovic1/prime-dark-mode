@@ -566,6 +566,9 @@ select {
 /* /////////////// */
 /* WEBSITES LISTED */
 
+/* /////////////// */
+/* WEBSITES LISTED */
+
 
 .websites-container {
     width: 350px;
@@ -577,6 +580,7 @@ select {
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
+
 }
 
 .website-card {

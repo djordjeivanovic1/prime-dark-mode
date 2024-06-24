@@ -9,7 +9,8 @@ chrome.runtime.onInstalled.addListener(async () => {
         activeHours: {},
         useSystemSettings: false,
         extensionShortcut: false,
-        currentWebsiteDarkMode: {}
+        currentWebsiteDarkMode: {},
+        extensionActive: true
     });
 
     const manifest = chrome.runtime.getManifest();
@@ -71,31 +72,6 @@ function applySettings() {
     });
 }
 
-function showModal(filters, hostname) {
-    const modal = document.getElementById("myModal");
-    const span = document.getElementsByClassName("close")[0];
-    const modalText = document.getElementById("modalText");
-
-    modalText.innerHTML = `<strong>Settings for ${hostname} saved:</strong><br>
-    Brightness: ${filters.brightness}<br>
-    Contrast: ${filters.contrast}<br>
-    Sepia: ${filters.sepia}<br>
-    Greyscale: ${filters.greyscale}`;
-
-    modal.style.display = "block";
-
-    // Close the modal when the user clicks on <span> (x)
-    span.onclick = function() {
-        modal.style.display = "none";
-    }
-
-    // Close the modal when the user clicks anywhere outside of the modal
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    }
-}
 
 // Message handlers
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
