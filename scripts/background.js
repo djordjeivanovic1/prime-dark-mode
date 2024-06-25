@@ -7,7 +7,6 @@ chrome.runtime.onInstalled.addListener(async () => {
         darkMode: true,
         themes: {},
         activeHours: {},
-        useSystemSettings: false,
         extensionShortcut: false,
         currentWebsiteDarkMode: {},
         extensionActive: true
@@ -36,6 +35,20 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Apply settings on startup
 chrome.runtime.onStartup.addListener(() => {
     applySettings();
+});
+
+// Handle command shortcuts
+chrome.commands.onCommand.addListener(async (command) => {
+    if (command === 'toggle-extension') {
+        const data = await chrome.storage.local.get(['extensionActive']);
+        if (data.extensionActive) {
+            deactivateExtension();
+            await chrome.storage.local.set({ extensionActive: false });
+        } else {
+            activateExtension();
+            await chrome.storage.local.set({ extensionActive: true });
+        }
+    }
 });
 
 // Helper function to apply settings to all tabs
@@ -72,6 +85,25 @@ function applySettings() {
     });
 }
 
+// Helper function to clear all filters
+function clearAllFilters() {
+    chrome.storage.local.set({ filters: {} }, () => {
+        chrome.tabs.query({}, (tabs) => {
+            tabs.forEach((tab) => {
+                if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tab.id },
+                        files: ['content.js']
+                    }, () => {
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "clearAllFilters"
+                        });
+                    });
+                }
+            });
+        });
+    });
+}
 
 // Message handlers
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -161,5 +193,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         });
         return true;
+    } else if (request.action === "clearAllFilters") {
+        clearAllFilters();
     }
 });
+
+function activateExtension() {
+    chrome.storage.local.set({ extensionActive: true }, function() {
+        chrome.runtime.sendMessage({ action: 'applyFilters', filters: {
+            brightness: 50,
+            contrast: 70,
+            sepia: 0,
+            greyscale: 30
+        }});
+    });
+}
+
+function deactivateExtension() {
+    chrome.storage.local.set({ extensionActive: false }, function() {
+        chrome.runtime.sendMessage({ action: 'clearAllFilters' });
+    });
+}

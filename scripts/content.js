@@ -38,6 +38,15 @@ chrome.storage.local.get(["darkMode"], (data) => {
     }
 });
 
+////////////////////////////////////////////////
+// CLEAR ALL FILTERS WHEN EXTENSION IS CLOSED //
+////////////////////////////////////////////////
+
+function clearAllFilters() {
+    document.documentElement.style.filter = "";
+}
+
+
 //////////////////////////////////////////////////
 // LISTEN FOR MESSAGES FROM BACKGROUND SCRIPT   //
 //////////////////////////////////////////////////
@@ -49,8 +58,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === "applyFilters") {
         applyFilters(request.filters);
         sendResponse({ success: true });
-    } else if (request.action === "clearAllFilters") {
+    } else if (request.action === "clearFilters") {
         clearAllFilters();
         sendResponse({ status: "filters_cleared" });
     }
 });
+

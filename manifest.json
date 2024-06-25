@@ -41,5 +41,13 @@
             "resources": ["images/*"],
             "matches": ["<all_urls>"]
         }
-    ]
+    ],
+    "commands": {
+    "toggle-extension": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E"
+      },
+      "description": "Toggle the extension"
+    }
+  }
 }

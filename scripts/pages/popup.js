@@ -9,7 +9,7 @@ chrome.runtime.onInstalled.addListener(async () => {
         activeHours: {},
         useSystemSettings: false,
         extensionShortcut: false,
-        currentWebsiteDarkMode: {},
+        currentWebsiteDarkMode: false,
         extensionActive: true
     });
 
@@ -165,6 +165,26 @@ function updateFilters() {
     });
 }
 
+ // Function to update the UI with loaded filters for the current hostname
+    function updateUIWithFilters(hostname) {
+        chrome.storage.local.get(["filters"], function(data) {
+            const filtersData = data.filters || {};
+            const filters = filtersData[hostname] || initialFilters;
+
+            // Update slider values
+            document.getElementById('brightnessSlider').value = filters.brightness;
+            document.getElementById('contrastSlider').value = filters.contrast;
+            document.getElementById('sepiaSlider').value = filters.sepia;
+            document.getElementById('greyscaleSlider').value = filters.greyscale;
+
+            // Update displayed values
+            document.getElementById('brightnessValue').textContent = filters.brightness;
+            document.getElementById('contrastValue').textContent = filters.contrast;
+            document.getElementById('sepiaValue').textContent = filters.sepia;
+            document.getElementById('greyscaleValue').textContent = filters.greyscale;
+        });
+    }
+
 function showAlert(filters, hostname) {
     const alertText = `Settings for ${hostname} saved:\n
     Brightness: ${filters.brightness}\n
@@ -229,21 +249,63 @@ function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
     });
 }
 
+// Function to update the toggle state based on darkMode setting
+function updateToggleState(darkMode) {
+    const globalToggle = document.getElementById('darkModeToggle');
+    globalToggle.checked = darkMode;
+    const websiteToggle = document.getElementById('currentWebsiteToggle');
+    websiteToggle.checked = darkMode;
+}
+
+let initialFilters = {
+    brightness: 100,
+    contrast: 100,
+    sepia: 0,
+    greyscale: 0
+};
+
+// Function to update the UI with loaded filters for the current hostname
+function updateUIWithFilters(hostname) {
+    chrome.storage.local.get(["filters"], function(data) {
+        const filtersData = data.filters || {};
+        const filters = filtersData[hostname] || {
+            brightness: 100,
+            contrast: 100,
+            sepia: 0,
+            greyscale: 0
+        };
+
+        // Update slider values
+        document.getElementById('brightnessSlider').value = filters.brightness;
+        document.getElementById('contrastSlider').value = filters.contrast;
+        document.getElementById('sepiaSlider').value = filters.sepia;
+        document.getElementById('greyscaleSlider').value = filters.greyscale;
+
+        // Update displayed values
+        document.getElementById('brightnessValue').textContent = filters.brightness;
+        document.getElementById('contrastValue').textContent = filters.contrast;
+        document.getElementById('sepiaValue').textContent = filters.sepia;
+        document.getElementById('greyscaleValue').textContent = filters.greyscale;
+    });
+}
+
+
 document.addEventListener('DOMContentLoaded', function() {
 
-    let initialFilters = {
-        brightness: 100,
-        contrast: 100,
-        sepia: 0,
-        greyscale: 0
-    };
+   // Load initial settings from storage
+    chrome.storage.local.get(['darkMode'], function(data) {
+        const darkMode = data.darkMode || false; 
+        updateToggleState(darkMode);
+    });
+
     // Request the active tab's URL from the background script
     chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
         if (response.error) {
             console.error(response.error);
         } else {
             const { url, hostname } = response;
-            document.getElementById('website-span').textContent = url;
+            document.getElementById('website-span').textContent = hostname;
+            updateUIWithFilters(hostname);
 
             // Retrieve and apply stored settings for the current website
             chrome.storage.local.get(["filters", "currentWebsiteDarkMode"], (data) => {
@@ -291,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.get(["darkMode"], function(data) {
             const darkModeOn = data.darkMode || false;
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                toggleDarkMode(!darkModeOn, tabs[0].id);  // Toggle the state
+                toggleDarkMode(!darkModeOn, tabs[0].id); 
             });
         });
     });

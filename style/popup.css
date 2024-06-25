@@ -341,10 +341,9 @@ input[type="range"] {
     margin-top: 20px;
 }
 
- /*////////////////////// */
- /* SETTINGS PAGE STYLING */
+/* SETTINGS PAGE STYLING */
 
- .settings-container {
+.settings-container {
     width: 350px;
     height: 510px;
     padding: 20px;
@@ -360,6 +359,14 @@ p {
     color: var(--text-color);
 }
 
+#timeSettings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex-wrap: nowrap; /* Prevent wrapping to multiple rows */
+}
+
 /* CONTAINERS CENTERING  */
 .toggle-container,
 .system-settings-container,
@@ -370,7 +377,6 @@ p {
     align-items: center;
     margin-bottom: 20px;
 }
-
 
 /* POSITIONING OF THE TOGGLE BUTTON */
 #toggle-container {
@@ -412,13 +418,6 @@ input:checked + .slider:before {
     margin-bottom: 20px;
 }
 
-#timeSettings {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
 select {
     padding: 5px;
     border-radius: 5px;
@@ -427,7 +426,6 @@ select {
     font-size: 14px;
     color: var(--input-text-color);
 }
-
 
 .to {
     margin: 0 10px;
@@ -467,7 +465,7 @@ select {
 }
 
 .toggle {
-    display: absolute;
+    display: flex; /* Changed from absolute to flex */
     align-items: center;
     margin-bottom: 10px;
 }
