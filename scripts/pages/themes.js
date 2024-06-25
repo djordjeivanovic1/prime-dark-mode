@@ -37,9 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         document.querySelector('.apply-btn').addEventListener('click', applyTheme);
-        document.querySelector('#websiteButton').addEventListener('click', function() {
-            window.location.href = '../../popup/websites.html';  
-        });
     });
 });
 
@@ -54,7 +51,7 @@ function applyTheme() {
 
         if (themeFilters) {
             chrome.storage.local.set({ filters: themeFilters }, function() {
-                console.log('Filters set:', themeFilters);  // Log the filters being set
+                console.log('Filters set:', themeFilters); 
                 chrome.runtime.sendMessage({
                     action: "applyFilters",
                     filters: themeFilters

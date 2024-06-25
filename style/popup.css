@@ -305,7 +305,7 @@ input[type="range"] {
 }
 
 /* Buttons Styling Themes Page */
-.apply-btn, .websites-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton, #clearAllSettingsButton{
+.apply-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton, #clearAllSettingsButton{
     background-color: var(--button-background-color); 
     border: none;
     border-radius: 15px;
@@ -315,23 +315,30 @@ input[type="range"] {
     transition: background-color 0.3s, transform 0.3s;
 }
 
-.apply-btn:hover, .websites-btn:hover, .add-theme-btn:hover {
+.apply-btn:hover, .add-theme-btn:hover {
     background-color: var(--button-hover-background-color);
     transform: translateY(-2px);
 }
 
-.button-container {
+.button-container-themes {
     display: flex;
-    justify-content: space-between; 
-    gap: 25px; 
     padding: 20px 0;
-    max-width: 400px; 
+    max-width: 150px; 
     margin: 0 auto; 
 }
 
 .apply-btn, .websites-btn {
     flex: 1;
     text-align: center;
+}
+#applicationBtn {
+    position: absolute;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px;
+    height: 40px;
+    margin-top: 20px;
 }
 
  /*////////////////////// */
@@ -560,69 +567,5 @@ select {
 }
 
 .modal form button:hover {
-    background-color: var(--button-hover-background-color);
-}
-
-/* /////////////// */
-/* WEBSITES LISTED */
-
-/* /////////////// */
-/* WEBSITES LISTED */
-
-
-.websites-container {
-    width: 350px;
-    height: 510px;
-    padding: 20px;
-    background: var(--background-color);
-    border-radius: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-
-}
-
-.website-card {
-    background-color: var(--card-background-color);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: var(--card-shadow);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: box-shadow 0.3s ease;
-}
-
-.website-card:hover {
-    box-shadow: var(--card-hover-shadow);
-}
-
-.website-info {
-    flex-grow: 1;
-}
-
-.website-name {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-.website-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.edit-btn {
-    padding: 10px 20px;
-    background-color: var(--button-background-color);
-    border: none;
-    border-radius: 5px;
-    color: var(--text-color);
-    cursor: pointer;
-}
-
-.edit-btn:hover {
     background-color: var(--button-hover-background-color);
 }
