@@ -12,6 +12,7 @@ chrome.runtime.onInstalled.addListener(async () => {
         currentWebsiteDarkMode: {},
     });
 
+    
     const manifest = chrome.runtime.getManifest();
     const contentScripts = manifest.content_scripts || [];
 
@@ -56,34 +57,58 @@ function applySettings() {
     chrome.tabs.query({}, (tabs) => {
         tabs.forEach((tab) => {
             if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-                chrome.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    files: ['content.js']
-                }, () => {
-                    chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-                        if (data.filters) {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: "applyFilters",
-                                filters: data.filters
-                            });
-                        }
-
-                        const url = new URL(tab.url);
-                        const hostname = url.hostname;
-                        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-                            ? data.currentWebsiteDarkMode[hostname] 
-                            : data.darkMode;
-
+                const url = new URL(tab.url);
+                const hostname = url.hostname;
+                
+                chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
+                    if (data.filters) {
+                        const websiteFilters = data.filters[hostname] || {};
                         chrome.tabs.sendMessage(tab.id, {
-                            action: "toggleDarkMode",
-                            darkMode: darkMode
+                            action: "applyFilters",
+                            filters: websiteFilters
                         });
+                    }
+
+                    const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+                        ? data.currentWebsiteDarkMode[hostname] 
+                        : data.darkMode;
+
+                    chrome.tabs.sendMessage(tab.id, {
+                        action: "toggleDarkMode",
+                        darkMode: darkMode
                     });
                 });
             }
         });
     });
 }
+
+// Apply settings to new tabs
+chrome.tabs.onCreated.addListener((tab) => {
+    if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+        const url = new URL(tab.url);
+        const hostname = url.hostname;
+
+        chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
+            if (data.filters) {
+                const websiteFilters = data.filters[hostname] || {};
+                chrome.tabs.sendMessage(tab.id, {
+                    action: "applyFilters",
+                    filters: websiteFilters
+                });
+            }
+
+            const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+                ? data.currentWebsiteDarkMode[hostname] 
+                : data.darkMode;
+
+            chrome.tabs.sendMessage(tab.id, {
+                action: "toggleDarkMode",
+                darkMode: darkMode
+            });
+        });
+    }
+});
 
 // Helper function to clear all filters
 function clearAllFilters() {

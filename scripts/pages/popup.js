@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener(async () => {
         currentWebsiteDarkMode: false,
         extensionActive: true
     });
-
+    
     const manifest = chrome.runtime.getManifest();
     const contentScripts = manifest.content_scripts || [];
 
