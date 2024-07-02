@@ -7,9 +7,9 @@ chrome.runtime.onInstalled.addListener(async () => {
         darkMode: true,
         themes: {},
         activeHours: {},
-        extensionShortcut: false,
+        extensionShortcut: true,
+        extensionActive: true,
         currentWebsiteDarkMode: {},
-        extensionActive: true
     });
 
     const manifest = chrome.runtime.getManifest();
@@ -90,16 +90,16 @@ function clearAllFilters() {
     chrome.storage.local.set({ filters: {} }, () => {
         chrome.tabs.query({}, (tabs) => {
             tabs.forEach((tab) => {
-                if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        files: ['content.js']
-                    }, () => {
-                        chrome.tabs.sendMessage(tab.id, {
-                            action: "clearAllFilters"
-                        });
+                const url = new URL(tab.url);
+                const hostname = url.hostname;
+                chrome.storage.local.get("filters", (data) => {
+                    const websiteFilters = data.filters[hostname] || {};
+                    websiteFilters = {};
+                    chrome.tabs.sendMessage(tab.id, {
+                        action: "applyFilters",
+                        filters: websiteFilters
                     });
-                }
+                });
             });
         });
     });

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const hours = [...Array(12).keys()].map(i => i + 1);
+    const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
     const minutes = ["00", "15", "30", "45"];
     const periods = ["AM", "PM"];
 
@@ -10,10 +10,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const endTimeMinute = document.getElementById('endTimeMinute');
     const endTimePeriod = document.getElementById('endTimePeriod');
 
+    let isShortcutEnabled = true; // Track if the shortcut is enabled
+
+    // Populate select elements with options
     function populateSelect(selectElement, options) {
         options.forEach(optionValue => {
             const option = document.createElement('option');
-            option.value = optionValue.toString().padStart(2, '0');
+            option.value = optionValue;
             option.text = optionValue;
             selectElement.add(option);
         });
@@ -28,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Convert to 24-hour format
     function convertTo24Hour(hour, period) {
+        hour = parseInt(hour, 10);
         if (period === 'PM' && hour < 12) {
             return hour + 12;
         } else if (period === 'AM' && hour === 12) {
@@ -37,9 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Helper function to check if current time is within a specified time range
+    // Check if current time is within a specified time range
     function isWithinTimeRange(currentHour, currentMinute, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod) {
-        // Convert to 24-hour format for comparison
         const current24Hour = convertTo24Hour(currentHour, startPeriod);
         const start24Hour = convertTo24Hour(startHour, startPeriod);
         const end24Hour = convertTo24Hour(endHour, endPeriod);
@@ -55,25 +58,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to check if extension should be active based on active hours
+    // Check if extension should be active based on active hours
     function checkExtensionStatus(activeHours, extensionActive) {
         if (activeHours.enabled) {
             const currentTime = new Date();
             const currentHour = currentTime.getHours();
             const currentMinute = currentTime.getMinutes();
             
-            const startHour = parseInt(activeHours.startHour, 10);
-            const startMinute = parseInt(activeHours.startMinute, 10);
+            const startHour = activeHours.startHour;
+            const startMinute = activeHours.startMinute;
             const startPeriod = activeHours.startPeriod;
-            const endHour = parseInt(activeHours.endHour, 10);
-            const endMinute = parseInt(activeHours.endMinute, 10);
+            const endHour = activeHours.endHour;
+            const endMinute = activeHours.endMinute;
             const endPeriod = activeHours.endPeriod;
             
             const isActiveTime = isWithinTimeRange(currentHour, currentMinute, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod);
-
             const shouldBeActive = isActiveTime && extensionActive;
 
-            // Update extension active state based on current time and settings
             chrome.storage.local.set({ extensionActive: shouldBeActive }, function() {
                 if (!shouldBeActive) {
                     deactivateExtension();
@@ -82,7 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         } else {
-            // Active hours not enabled, keep extension state as it is
             chrome.storage.local.set({ extensionActive: extensionActive });
             if (extensionActive) {
                 activateExtension();
@@ -92,48 +92,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Load settings from storage
-    chrome.storage.local.get(['activeHours', 'extensionShortcut', 'extensionActive'], function(data) {
-        const activeHours = data.activeHours || {};
-        const extensionShortcut = data.extensionShortcut || true;
-        const extensionActive = data.extensionActive || false;
+    // Load settings from storage and initialize UI
+    function loadSettings() {
+        chrome.storage.local.get(['activeHours', 'extensionShortcut', 'extensionActive'], function(data) {
+            const activeHours = data.activeHours || {};
+            const extensionShortcut = data.extensionShortcut !== undefined ? data.extensionShortcut : true;
+            const extensionActive = data.extensionActive !== undefined ? data.extensionActive : false;
 
-        if (extensionActive) {
-            activateExtension();
-        } else {
-            deactivateExtension();
-        }
+            document.getElementById('setHoursToggle').checked = activeHours.enabled || false;
+            startTimeHour.value = activeHours.startHour || '08';
+            startTimeMinute.value = activeHours.startMinute || '00';
+            startTimePeriod.value = activeHours.startPeriod || 'AM';
+            endTimeHour.value = activeHours.endHour || '05';
+            endTimeMinute.value = activeHours.endMinute || '00';
+            endTimePeriod.value = activeHours.endPeriod || 'PM';
 
-        document.getElementById('setHoursToggle').checked = activeHours.enabled || false;
-        startTimeHour.value = activeHours.startHour || '08';
-        startTimeMinute.value = activeHours.startMinute || '00';
-        startTimePeriod.value = activeHours.startPeriod || 'AM';
-        endTimeHour.value = activeHours.endHour || '05';
-        endTimeMinute.value = activeHours.endMinute || '00';
-        endTimePeriod.value = activeHours.endPeriod || 'PM';
+            document.getElementById('shortcutToggle').checked = extensionShortcut;
+            document.getElementById('activeToggle').checked = extensionActive;
 
-        document.getElementById('shortcutToggle').checked = extensionShortcut;
-        document.getElementById('activeToggle').checked = extensionActive;
-
-        document.getElementById('timeSettings').style.display = activeHours.enabled ? 'flex' : 'none';
-        
-        checkExtensionStatus(activeHours, extensionActive);
-
-        // Set extension state based on initial load
-        if (extensionActive) {
-            activateExtension();
-        } else {
-            deactivateExtension();
-        }
-    });
-
-    // Toggle visibility of time settings
-    document.getElementById('setHoursToggle').addEventListener('change', function() {
-        document.getElementById('timeSettings').style.display = this.checked ? 'flex' : 'none';
-    });
+            document.getElementById('timeSettings').style.display = activeHours.enabled ? 'flex' : 'none';
+            
+            isShortcutEnabled = extensionShortcut; // Set initial shortcut state
+            checkExtensionStatus(activeHours, extensionActive);
+        });
+    }
 
     // Save settings
-    document.querySelector('.save-btn').addEventListener('click', function() {
+    function saveSettings() {
         const activeHours = {
             enabled: document.getElementById('setHoursToggle').checked,
             startHour: document.getElementById('startTimeHour').value,
@@ -143,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
             endMinute: document.getElementById('endTimeMinute').value,
             endPeriod: document.getElementById('endTimePeriod').value,
         };
-        checkExtensionStatus(activeHours, document.getElementById('activeToggle').checked);
 
         const extensionShortcut = document.getElementById('shortcutToggle').checked;
         const extensionActive = document.getElementById('activeToggle').checked;
@@ -154,21 +138,28 @@ document.addEventListener('DOMContentLoaded', function() {
             extensionActive: extensionActive,
         }, function() {
             alert('Settings saved!');
+            isShortcutEnabled = extensionShortcut; // Update shortcut state
             checkExtensionStatus(activeHours, extensionActive);
         });
-        
-    });
+    }
 
     // Function to deactivate the extension
     function deactivateExtension() {
+        chrome.storage.local.set({ extensionActive: true }, function() {
+            chrome.runtime.sendMessage({ action: 'applyFilters', filters: {
+                brightness: 100,
+                contrast: 100,
+                sepia: 0,
+                greyscale: 0
+            }});
+        });
         chrome.storage.local.set({ extensionActive: false }, function() {
             chrome.runtime.sendMessage({ action: 'clearAllFilters' });
-
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
                 tabs.forEach(tab => {
                     chrome.storage.local.get(['darkMode'], function(result) {
                         if (result.darkMode) {
-                            chrome.tabs.sendMessage(tab.id, { action: 'clearAllFilters'});
+                            chrome.tabs.sendMessage(tab.id, { action: 'clearAllFilters' });
                             chrome.tabs.sendMessage(tab.id, { action: 'toggleDarkMode', darkMode: false });
                             chrome.tabs.sendMessage(tab.id, { action: 'toggleCurrentWebsiteDarkMode', darkMode: false });
                         }
@@ -177,13 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Disable navigation buttons
-        const navButtons = document.querySelectorAll('.options .button-group .button');
-        navButtons.forEach(button => {
-            button.disabled = true;
-            button.style.pointerEvents = 'none';
-            button.style.cursor = 'not-allowed';
-        });
+        disableNavButtons();
     }
 
     // Function to activate the extension
@@ -195,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 sepia: 0,
                 greyscale: 30
             }});
-            
 
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
                 tabs.forEach(tab => {
@@ -209,7 +193,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Enable navigation buttons
+        enableNavButtons();
+    }
+
+    // Disable navigation buttons
+    function disableNavButtons() {
+        const navButtons = document.querySelectorAll('.options .button-group .button');
+        navButtons.forEach(button => {
+            button.disabled = true;
+            button.style.pointerEvents = 'none';
+            button.style.cursor = 'not-allowed';
+        });
+    }
+
+    // Enable navigation buttons
+    function enableNavButtons() {
         const navButtons = document.querySelectorAll('.options .button-group .button');
         navButtons.forEach(button => {
             button.disabled = false;
@@ -218,7 +216,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Extension activation toggle
+    // Event listener for toggling time settings visibility
+    document.getElementById('setHoursToggle').addEventListener('change', function() {
+        document.getElementById('timeSettings').style.display = this.checked ? 'flex' : 'none';
+    });
+
+    // Event listener for saving settings
+    document.querySelector('.save-btn').addEventListener('click', saveSettings);
+
+    // Event listener for toggling extension activation
     document.getElementById('activeToggle').addEventListener('change', function() {
         const active = this.checked;
         if (active) {
@@ -228,24 +234,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Event listener for shortcut toggle
+    document.getElementById('shortcutToggle').addEventListener('change', function() {
+        isShortcutEnabled = this.checked;
+    });
+
     // Listen for the keyboard shortcut
     document.addEventListener('keydown', function(event) {
-        if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
-            chrome.storage.local.get(['extensionShortcut'], function(data) {
-                if (data.extensionShortcut) {
-                    chrome.storage.local.get(['extensionActive'], function(data) {
-                        if (data.extensionActive) {
-                            deactivateExtension();
-                            chrome.storage.local.set({ extensionActive: false });
-                        } else {
-                            activateExtension();
-                            chrome.storage.local.set({ extensionActive: true });
-                        }
-                        // Update the toggle state in the UI
-                        document.getElementById('activeToggle').checked = !data.extensionActive;
-                    });
+        if (isShortcutEnabled && (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
+            chrome.storage.local.get(['extensionActive'], function(result) {
+                const isActive = result.extensionActive !== undefined ? result.extensionActive : false;
+                const newState = !isActive;
+                if (newState) {
+                    activateExtension();
+                } else {
+                    deactivateExtension();
                 }
+                chrome.storage.local.set({ extensionActive: newState }, function() {
+                    document.getElementById('activeToggle').checked = newState;
+                });
             });
         }
     });
+
+    loadSettings();
 });

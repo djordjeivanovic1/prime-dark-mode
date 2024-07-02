@@ -198,7 +198,7 @@ function showAlert(filters, hostname) {
 function applyDarkMode(tabId, darkModeOn) {
     chrome.tabs.sendMessage(tabId, {
         action: 'toggleDarkMode',
-        darkMode: darkModeOn
+        darkMode: !darkModeOn
     }, function(response) {
         if (response && response.success) {
             if (darkModeOn) {

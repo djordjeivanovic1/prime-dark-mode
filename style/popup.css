@@ -270,6 +270,13 @@ input[type="range"] {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.theme-title {
+    margin-top: 10px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+
 .theme-card:hover {
     transform: scale(1.05);
     border-color: var(--link-color);
