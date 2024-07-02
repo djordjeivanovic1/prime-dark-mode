@@ -171,30 +171,25 @@ document.addEventListener('DOMContentLoaded', function() {
         disableNavButtons();
     }
 
-    // Function to activate the extension
+ // Function to activate the extension
     function activateExtension() {
-        chrome.storage.local.set({ extensionActive: true }, function() {
-            chrome.runtime.sendMessage({ action: 'applyFilters', filters: {
-                brightness: 50,
-                contrast: 70,
-                sepia: 0,
-                greyscale: 30
-            }});
-
-            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                tabs.forEach(tab => {
-                    chrome.storage.local.get(['darkMode'], function(result) {
-                        if (!result.darkMode) {
-                            chrome.tabs.sendMessage(tab.id, { action: 'toggleDarkMode', darkMode: true });
-                            chrome.tabs.sendMessage(tab.id, { action: 'toggleCurrentWebsiteDarkMode', darkMode: true });
-                        }
-                    });
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            const tab = tabs[0];
+            const hostname = new URL(tab.url).hostname;
+            // Retrieve and apply website-specific filters
+            chrome.storage.local.get(["filters"], (data) => {
+                const websiteFilters = data.filters ? data.filters[hostname] : {};
+                chrome.tabs.sendMessage(tab.id, {
+                    action: "applyFilters",
+                    filters: websiteFilters
                 });
-            });
+            });    
         });
-
+        // Enable navigation buttons
         enableNavButtons();
     }
+
+        
 
     // Disable navigation buttons
     function disableNavButtons() {

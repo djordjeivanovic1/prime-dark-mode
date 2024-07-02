@@ -247,6 +247,7 @@ input[type="range"] {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
     margin: 0 auto; /* Center the container */
+    overflow: hidden; /* Ensure inner content doesn't overflow the container */
 }
 
 /* Themes Container */
@@ -255,6 +256,9 @@ input[type="range"] {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     justify-content: center;
+    overflow-y: auto; /* Enable vertical scrolling */
+    height: calc(100% - 370px); /* Adjust height to fit within the parent container */
+    padding: 10px;
 }
 
 /* Theme Card Styling */
@@ -276,7 +280,6 @@ input[type="range"] {
     color: var(--text-color);
 }
 
-
 .theme-card:hover {
     transform: scale(1.05);
     border-color: var(--link-color);
@@ -288,23 +291,6 @@ input[type="range"] {
     margin-bottom: 10px;
 }
 
-/* Theme Backgrounds */
-.deep-contrast {
-    background: linear-gradient(to right, rgb(33, 31, 31), gray);
-}
-
-.monochrome {
-    background: linear-gradient(to right, black, rgb(73, 64, 64));
-}
-
-.sepia {
-    background: linear-gradient(to right, darkolivegreen, sienna);
-}
-
-.ivana-test {
-    background: linear-gradient(to right, indigo, plum);
-}
-
 .theme-title {
     margin-top: 10px;
     font-weight: bold;
@@ -312,7 +298,7 @@ input[type="range"] {
 }
 
 /* Buttons Styling Themes Page */
-.apply-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton, #clearAllSettingsButton{
+.apply-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton, #clearAllSettingsButton {
     background-color: var(--button-background-color); 
     border: none;
     border-radius: 15px;
@@ -338,6 +324,7 @@ input[type="range"] {
     flex: 1;
     text-align: center;
 }
+
 #applicationBtn {
     position: absolute;
     top: 90%;

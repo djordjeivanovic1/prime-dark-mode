@@ -48,13 +48,10 @@ function applySettings() {
                     files: ['content.js']
                 }, () => {
                     chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-                        if (data.filters) {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: "applyFilters",
-                                filters: data.filters
-                            });
-                        }
-
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "applyFilters",
+                            filters: data.filters
+                        });
                         const url = new URL(tab.url);
                         const hostname = url.hostname;
                         const darkMode = data.darkMode && (data.currentWebsiteDarkMode[hostname] !== false);
