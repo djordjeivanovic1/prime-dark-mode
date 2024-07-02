@@ -1,0 +1,53 @@
+{
+    "manifest_version": 3,
+    "name": "Prime Dark Mode",
+    "version": "1.0",
+    "description": "A Chrome extension to enable dark mode with customizable settings.",
+    "icons": {
+        "16": "assets/icons/16.png",
+        "32": "assets/icons/32.png",
+        "64": "assets/icons/64.png",
+        "128": "assets/icons/128.png"
+    },
+    "permissions": [
+        "storage",
+        "activeTab",
+        "scripting",
+        "tabs"
+    
+    ],
+    "host_permissions": ["http://*/*", "https://*/*"],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "assets/icons/16.png",
+            "32": "assets/icons/32.png",
+            "64": "assets/icons/64.png",
+            "128": "assets/icons/128.png"
+        }
+    },
+    "background": {
+        "service_worker": "scripts/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["scripts/content.js"],
+            "css": ["style/content.css"]
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["images/*"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "commands": {
+        "toggle-extension": {
+        "suggested_key": {
+            "default": "Ctrl+Shift+E"
+        },
+        "description": "Toggle the extension"
+        }
+  }
+}

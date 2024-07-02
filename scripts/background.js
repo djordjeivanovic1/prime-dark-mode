@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener(async () => {
         currentWebsiteDarkMode: {},
     });
 
-    
+
     const manifest = chrome.runtime.getManifest();
     const contentScripts = manifest.content_scripts || [];
 
@@ -90,13 +90,11 @@ chrome.tabs.onCreated.addListener((tab) => {
         const hostname = url.hostname;
 
         chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-            if (data.filters) {
-                const websiteFilters = data.filters[hostname] || {};
+            const websiteFilters = data.filters[hostname] || {};
                 chrome.tabs.sendMessage(tab.id, {
                     action: "applyFilters",
                     filters: websiteFilters
                 });
-            }
 
             const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
                 ? data.currentWebsiteDarkMode[hostname] 
