@@ -30,7 +30,7 @@
 
         
         <!-- TOGGLE ON/OFF DARK MODE -->
-        <div class="toggle-group" id="darkModeToggle">
+        <div class="toggle-group" id="toggleContainer">
             <div class="toggle">
                 <label for="darkModeToggle">Dark mode</label>
                 <input type="checkbox" id="darkModeToggle">
@@ -43,42 +43,102 @@
             </div>
         </div>
 
-        <!-- FILTERING OPTIONS AVAILABLE -->
+       <!-- FILTERING OPTIONS AVAILABLE -->
         <div class="slider-container">
             <div class="slider-label">
                 <label for="brightnessSlider">Brightness</label>
-                <span id="brightnessValue">+50</span>
+                <span class="counter" id="brightnessValue">+50</span>
             </div>
-            <input type="range" id="brightnessSlider" class="slider" min="0" max="100" value="50">
+            <div class="slider-div" id="slider-div">
+                <button class="sliderButton" id="decreaseBrightnessButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="10,2 4,8 10,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <div class="slider-wrapper">
+                    <input type="range" id="brightnessSlider" class="slider" min="0" max="100" value="50">
+                </div>
+                <button class="sliderButton" id="increaseBrightnessButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="6,2 12,8 6,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
         </div>
+
         <div class="slider-container">
             <div class="slider-label">
                 <label for="contrastSlider">Contrast</label>
-                <span id="contrastValue">-10</span>
+                <span class="counter" id="contrastValue">-10</span>
             </div>
-            <input type="range" id="contrastSlider" class="slider" min="-100" max="100" value="-10">
+            <div class="slider-div" id="slider-div">
+                <button class="sliderButton" id="decreaseContrastButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="10,2 4,8 10,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <div class="slider-wrapper">
+                    <input type="range" id="contrastSlider" class="slider" min="-100" max="100" value="-10">
+                </div>
+                <button class="sliderButton" id="increaseContrastButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="6,2 12,8 6,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
         </div>
+
         <div class="slider-container">
             <div class="slider-label">
                 <label for="sepiaSlider">Sepia</label>
-                <span id="sepiaValue">0</span>
+                <span class="counter" id="sepiaValue">0</span>
             </div>
-            <input type="range" id="sepiaSlider" class="slider" min="0" max="100" value="0">
+            
+            <div class="slider-div" id="slider-div">
+                <button class="sliderButton" id="decreaseSepiaButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="10,2 4,8 10,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <div class="slider-wrapper">
+                    <input type="range" id="sepiaSlider" class="slider" min="0" max="100" value="0">
+                </div>
+                <button class="sliderButton" id="increaseSepiaButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="6,2 12,8 6,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
         </div>
+
         <div class="slider-container">
             <div class="slider-label">
                 <label for="greyscaleSlider">Greyscale</label>
-                <span id="greyscaleValue">0</span>
+                <span class="counter" id="greyscaleValue">0</span>
             </div>
-            <input type="range" id="greyscaleSlider" class="slider" min="0" max="100" value="0">
+            <div class="slider-div" id="slider-div">
+                <button class="sliderButton" id="decreaseGreyscaleButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="10,2 4,8 10,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <div class="slider-wrapper">
+                    <input type="range" id="greyscaleSlider" class="slider" min="0" max="100" value="0">
+                </div>
+                <button class="sliderButton" id="increaseGreyscaleButton">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <polyline points="6,2 12,8 6,14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
         </div>
-        
 
         <!-- SAVE THE CURRENT SET  -->
         <div class="button-container">
-            <button class="button" id="addThemeButton" href="../popup/add-theme-popup.html">Save as Theme</button>
-            <button class="button" id="saveSettingsButton">Save settings</button>
+            <button id="addThemeButton" href="../popup/add-theme-popup.html">Save as Theme</button>
+            <button id="saveSettingsButton">Save settings</button>
         </div>
+
 
     </div>
     <script src="../scripts/pages/popup.js"></script>

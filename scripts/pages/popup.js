@@ -285,9 +285,91 @@ function updateUIWithFilters(hostname) {
         document.getElementById('greyscaleValue').textContent = filters.greyscale;
     });
 }
+// Utility functions
+function updateButtonColors(slider, decreaseButton, increaseButton) {
+    const value = parseInt(slider.value);
+    if (value == slider.min) {
+        decreaseButton.style.color = 'gray';
+        increaseButton.style.color = 'white';
+    } else if (value == slider.max) {
+        decreaseButton.style.color = 'white';
+        increaseButton.style.color = 'gray';
+    } else {
+        decreaseButton.style.color = 'white';
+        increaseButton.style.color = 'white';
+    }
+}
 
+function updateSpanText(span, value) {
+    span.textContent = value == 0 ? 'Off' : value;
+}
+
+function handleSliderInput(slider, valueSpan, decreaseButton, increaseButton) {
+    const value = parseInt(slider.value);
+    updateSpanText(valueSpan, value);
+    updateButtonColors(slider, decreaseButton, increaseButton);
+}
+
+function handleButtonClick(slider, valueSpan, decreaseButton, increaseButton, step) {
+    let newValue = parseInt(slider.value) + step;
+    newValue = Math.max(slider.min, Math.min(slider.max, newValue));
+    slider.value = newValue;
+    handleSliderInput(slider, valueSpan, decreaseButton, increaseButton);
+}
 
 document.addEventListener('DOMContentLoaded', function() {
+    const sliders = [
+        { slider: 'brightnessSlider', span: 'brightnessValue', decreaseButton: 'decreaseBrightnessButton', increaseButton: 'increaseBrightnessButton' },
+        { slider: 'contrastSlider', span: 'contrastValue', decreaseButton: 'decreaseContrastButton', increaseButton: 'increaseContrastButton' },
+        { slider: 'sepiaSlider', span: 'sepiaValue', decreaseButton: 'decreaseSepiaButton', increaseButton: 'increaseSepiaButton' },
+        { slider: 'greyscaleSlider', span: 'greyscaleValue', decreaseButton: 'decreaseGreyscaleButton', increaseButton: 'increaseGreyscaleButton' }
+    ];
+
+    sliders.forEach(({ slider, span, decreaseButton, increaseButton }) => {
+        const sliderElement = document.getElementById(slider);
+        const spanElement = document.getElementById(span);
+        const decreaseButtonElement = document.getElementById(decreaseButton);
+        const increaseButtonElement = document.getElementById(increaseButton);
+
+        // Initial setup
+        handleSliderInput(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement);
+
+        // Slider input event listener
+        sliderElement.addEventListener('input', function() {
+            handleSliderInput(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement);
+            updateFilters();
+        });
+
+        // Button click and hold functionality
+        let intervalId;
+
+        const startIncreasing = () => {
+            handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, 1);
+            intervalId = setInterval(() => {
+                handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, 1);
+            }, 100);
+        };
+
+        const startDecreasing = () => {
+            handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, -1);
+            intervalId = setInterval(() => {
+                handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, -1);
+            }, 100);
+        };
+
+        const stopAdjusting = () => {
+            clearInterval(intervalId);
+        };
+
+        decreaseButtonElement.addEventListener('mousedown', startDecreasing);
+        increaseButtonElement.addEventListener('mousedown', startIncreasing);
+
+        decreaseButtonElement.addEventListener('mouseup', stopAdjusting);
+        increaseButtonElement.addEventListener('mouseup', stopAdjusting);
+
+        decreaseButtonElement.addEventListener('mouseleave', stopAdjusting);
+        increaseButtonElement.addEventListener('mouseleave', stopAdjusting);
+    });
 
    // Load initial settings from storage
     chrome.storage.local.get(['darkMode'], function(data) {
@@ -387,25 +469,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
-    // Slider event listeners
+    
     document.getElementById('brightnessSlider').addEventListener('input', function() {
-        document.getElementById('brightnessValue').textContent = this.value;
+        document.getElementById('brightnessValue').textContent = this.value == 0 ? 'Off' : this.value;
         updateFilters();
     });
 
     document.getElementById('contrastSlider').addEventListener('input', function() {
-        document.getElementById('contrastValue').textContent = this.value;
+        document.getElementById('contrastValue').textContent = this.value == 0 ? 'Off' : this.value;
         updateFilters();
     });
 
     document.getElementById('sepiaSlider').addEventListener('input', function() {
-        document.getElementById('sepiaValue').textContent = this.value;
+        document.getElementById('sepiaValue').textContent = this.value == 0 ? 'Off' : this.value;
         updateFilters();
     });
 
     document.getElementById('greyscaleSlider').addEventListener('input', function() {
-        document.getElementById('greyscaleValue').textContent = this.value;
+        document.getElementById('greyscaleValue').textContent = this.value == 0 ? 'Off' : this.value;
         updateFilters();
     });
 });
