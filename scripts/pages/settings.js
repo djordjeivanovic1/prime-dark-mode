@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        disableNavButtons();
+        disablePage();
     }
 
  // Function to activate the extension
@@ -186,29 +186,37 @@ document.addEventListener('DOMContentLoaded', function() {
             });    
         });
         // Enable navigation buttons
-        enableNavButtons();
+        enablePage();
     }
 
         
 
     // Disable navigation buttons
-    function disableNavButtons() {
+    function disablePage() {
         const navButtons = document.querySelectorAll('.options .button-group .button');
         navButtons.forEach(button => {
             button.disabled = true;
             button.style.pointerEvents = 'none';
             button.style.cursor = 'not-allowed';
         });
+        const hoursToggle = document.getElementById('setHoursToggle');
+        hoursToggle.disabled = true;
+        const shortcutToggle = document.getElementById('shortcutToggle');
+        shortcutToggle.disabled = true;
     }
 
     // Enable navigation buttons
-    function enableNavButtons() {
+    function enablePage() {
         const navButtons = document.querySelectorAll('.options .button-group .button');
         navButtons.forEach(button => {
             button.disabled = false;
             button.style.pointerEvents = 'auto';
             button.style.cursor = 'pointer';
         });
+        const hoursToggle = document.getElementById('setHoursToggle');
+        hoursToggle.disabled = false;
+        const shortcutToggle = document.getElementById('shortcutToggle');
+        shortcutToggle.disabled = false;
     }
 
     // Event listener for toggling time settings visibility

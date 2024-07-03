@@ -85,31 +85,52 @@ function applySettings() {
 
 // Apply settings to new tabs
 chrome.tabs.onCreated.addListener((tab) => {
-    chrome.tabs.onUpdated.addListener((tab) => {
-        if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-            const url = new URL(tab.url);
-            const hostname = url.hostname;
-    
-            chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-                const websiteFilters = data.filters[hostname] || {};
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "applyFilters",
-                        filters: websiteFilters
-                    });
-    
-                const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-                    ? data.currentWebsiteDarkMode[hostname] 
-                    : data.darkMode;
-    
+    if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+        const url = new URL(tab.url);
+        const hostname = url.hostname;
+
+        chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
+            const websiteFilters = data.filters[hostname] || {};
                 chrome.tabs.sendMessage(tab.id, {
-                    action: "toggleDarkMode",
-                    darkMode: darkMode
+                    action: "applyFilters",
+                    filters: websiteFilters
                 });
+
+            const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+                ? data.currentWebsiteDarkMode[hostname] 
+                : data.darkMode;
+
+            chrome.tabs.sendMessage(tab.id, {
+                action: "toggleDarkMode",
+                darkMode: darkMode
             });
-        }
-    });
+        });
+    }
 });
 
+chrome.tabs.onUpdated.addListener((tab) => {
+    if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+        const url = new URL(tab.url);
+        const hostname = url.hostname;
+
+        chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
+            const websiteFilters = data.filters[hostname] || {};
+                chrome.tabs.sendMessage(tab.id, {
+                    action: "applyFilters",
+                    filters: websiteFilters
+                });
+
+            const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+                ? data.currentWebsiteDarkMode[hostname] 
+                : data.darkMode;
+
+            chrome.tabs.sendMessage(tab.id, {
+                action: "toggleDarkMode",
+                darkMode: darkMode
+            });
+        });
+    }
+});
 
 // Helper function to clear all filters
 function clearAllFilters() {
