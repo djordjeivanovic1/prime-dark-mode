@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({ extensionShortcut: isShortcutEnabled });
     });
 
-    // Listen for the keyboard shortcut
+    // Listen for the keyboard shortcutcd 
     document.addEventListener('keydown', function(event) {
         if (isShortcutEnabled && (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
             chrome.storage.local.get(['extensionActive'], function(result) {
