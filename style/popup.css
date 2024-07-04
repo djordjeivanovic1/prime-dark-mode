@@ -24,6 +24,9 @@
     --button-text-color: #82D3EE;
     --settings-btn-color: #82D3EE;
     --settings-btn-text:#2B2B2E;
+    --modal-background-color: #2B2B2E;
+    --modal-header-background-color: #82D3EE;
+    --modal-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
 }
 
@@ -33,7 +36,6 @@
 /* BODY AND HTML STYLING */
 body {
     font-family: 'Titillium Web', sans-serif;
-    background-image: linear-gradient(to bottom right, var(--background-color-begin), var(--background-color-end) 40%);
     color: var(--text-color);
     margin: 0;
     padding: 0;
@@ -43,18 +45,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--background-color-begin);
 }
 
 /* CONTAINER STYLING */
 .container {
-    width: 350px;
-    height: 510px;
-    padding: 20px;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
     background-image: linear-gradient(to bottom right, var(--background-color-begin), var(--background-color-end) 40%);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
+
 
 /* HEADER LOGO SET UP */
 .header {
@@ -221,6 +226,7 @@ body {
     width: 95%;
     margin-bottom: 10px;
     padding: 5px;
+    margin-bottom: 10px;
 }
 
 .slider-label {
@@ -269,6 +275,7 @@ body {
     background: linear-gradient(to right, white, grey);
     outline: none;
     transition: opacity .2s;
+    
 }
 
 input[type='range'] {
@@ -295,6 +302,7 @@ input[type='range'] {
     cursor: pointer;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
+
 
 .slider::-moz-range-thumb {
     position: absolute;
@@ -333,7 +341,7 @@ input[type='range'] {
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-top: 40px;
+    margin-top: 55px;
     gap: 20px; 
 }
 
@@ -369,6 +377,64 @@ input[type='range'] {
     transform: translateY(-3px);
 }
 
+/* Modal container */
+#customModal {
+    display: none;
+    position: fixed;
+    left: 50%;
+    bottom: 10%; 
+    transform: translateX(-50%);
+    z-index: 1;
+    width: 300px;
+    max-width: 300px;
+    height: auto;
+    padding: 20px; /* Add some padding for better spacing */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-sizing: border-box; /* Ensure padding and border are included in the size */
+}
+
+/* Modal content */
+.modal-content {
+    background-color: var(--background-color);
+    text-align: center;
+    width: 100%;
+}
+
+/* Close button */
+.modal .close {
+    color: var(--link-color);
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.modal .close:hover,
+.modal .close:focus {
+    color: var(--highlight-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Title */
+#modalBody h2 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-color);
+    text-align: center; /* Center the title */
+}
+
+/* Modal body */
+.modal-content #modalBody {
+    color: var(--text-color);
+    font-size: 12px;
+    text-align: center; /* Center the body text */
+}
+
 
 /* /////////////// */
 /* Container Styling */
@@ -376,7 +442,7 @@ input[type='range'] {
     width: 350px;
     height: 510px;
     padding: 20px;
-    background: var(--background-color);
+    background-image: linear-gradient(to bottom right, var(--background-color-begin), var(--background-color-end) 40%);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
@@ -388,10 +454,10 @@ input[type='range'] {
 .theme-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 5px;
     justify-content: center;
-    overflow-y: auto; /* Enable vertical scrolling */
-    height: calc(100% - 370px); /* Adjust height to fit within the parent container */
+    overflow-y: auto; 
+    height: calc(100% - 200px); 
     padding: 10px;
 }
 
@@ -401,6 +467,7 @@ input[type='range'] {
     border-radius: 10px;
     border: 1px solid var(--border-color);
     width: 135px;
+    height: 110px;
     margin: 5px;
     padding: 10px;
     cursor: pointer;
@@ -432,19 +499,19 @@ input[type='range'] {
 }
 
 /* Buttons Styling Themes Page */
-.apply-btn, .add-theme-btn, #addThemeButton, #saveSettingsButton, #clearAllSettingsButton {
-    background-color: var(--button-background-color); 
-    border: none;
-    border-radius: 15px;
-    color: white;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
+.apply-btn {
+    border: 1px solid var(--border-color);
+    background: none;
+    color: var(--button-text-color);
+    border-color: var(--border-color);
+    flex: 1;
+    text-align: center;
 }
 
-.apply-btn:hover, .add-theme-btn:hover {
-    background-color: var(--button-hover-background-color);
-    transform: translateY(-2px);
+.apply-btn:hover {
+    background: var(--button-outlined-hover-background);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    transform: translateY(-3px);
 }
 
 .button-container-themes {
@@ -452,11 +519,6 @@ input[type='range'] {
     padding: 20px 0;
     max-width: 150px; 
     margin: 0 auto; 
-}
-
-.apply-btn, .websites-btn {
-    flex: 1;
-    text-align: center;
 }
 
 #applicationBtn {
@@ -469,20 +531,18 @@ input[type='range'] {
     margin-top: 20px;
 }
 
-/* SETTINGS PAGE STYLING */
-
 .settings-container {
     width: 350px;
     height: 510px;
     padding: 20px;
-    background: var(--background-color);
+    background-image: linear-gradient(to bottom right, var(--background-color-begin), var(--background-color-end) 40%);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
 }
 
 p {
-    margin: 0 0 10px;
+    margin: 0 0 15px; /* Increased margin-bottom */
     font-size: 14px;
     color: var(--text-color);
 }
@@ -491,7 +551,7 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 1px;
     flex-wrap: nowrap; /* Prevent wrapping to multiple rows */
 }
 
@@ -503,7 +563,7 @@ p {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Increased margin-bottom */
 }
 
 /* POSITIONING OF THE TOGGLE BUTTON */
@@ -512,13 +572,13 @@ p {
     display: flex;
     align-items: center;
     justify-content: center; 
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Increased margin-bottom */
     margin-left: 20px;
 }
 
 .toggle p {
     margin: 0;
-    margin-right: 10px; 
+    margin-right: 15px; /* Increased margin-right */
     font-size: 14px;
     color: var(--text-color);
 }
@@ -529,7 +589,7 @@ p {
     display: inline-block;
     width: 50px;
     height: 25px;
-    margin-bottom: 10px;
+    margin-bottom: 15px; /* Increased margin-bottom */
 }
 
 input:checked + .slider {
@@ -543,7 +603,7 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Increased margin-bottom */
 }
 
 select {
@@ -556,7 +616,7 @@ select {
 }
 
 .to {
-    margin: 0 10px;
+    margin: 0 15px; /* Increased margin */
     font-size: 20px;
     color: var(--text-color);
 }
@@ -578,24 +638,25 @@ select {
 }
 
 .save-btn {
-    background-color: var(--button-background-color);
-    color: var(--input-background-color);
     border: 1px solid var(--border-color);
-    padding: 10px;
-    border-radius: 15px;
+    background: var(--button-background-color);
+    color: var(--button-text-color);
+    border-radius: 5px;
+    padding: 10px 20px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
+    transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 
 .save-btn:hover {
-    background-color: var(--button-hover-background-color);
+    background: var(--button-hover-background-color);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
 }
 
 .toggle {
     display: flex; /* Changed from absolute to flex */
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px; /* Increased margin-bottom */
 }
 
 /* /////////////// */
@@ -605,7 +666,7 @@ select {
     width: 350px;
     height: 510px;
     padding: 20px;
-    background: var(--background-color);
+    background-image: linear-gradient(to bottom right, var(--background-color-begin), var(--background-color-end) 40%);
     border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
@@ -626,24 +687,29 @@ select {
     width: 30px;
     height: 30px;
     background-image: url('../assets/icons/back-button.png');
-    background-color: var(--button-background-color);
+    background-color: var(--button-text-color);
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
     border-radius: 50%;
+    border: 2px solid var(--button-text-color);
     cursor: pointer;
 }
 
 /* Modal Styling */
-.modal {
+.themeModal {
     margin-top: 20px;
     background-color: var(--modal-background-color);
     border-radius: 10px;
     padding: 20px;
+    padding-bottom: 3px;
     box-shadow: var(--modal-shadow);
     width: 300px;
-    height: 230px;
+    height: 220px; /* Adjusted height to ensure both forms have equal height */
     border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .modal-header {
@@ -659,19 +725,22 @@ select {
     color: var(--text-color);
 }
 
-.modal form {
+.themeModal form {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
 }
 
-.modal form label {
+.themeModal form label {
     font-size: medium;
     margin-bottom: 10px;
     color: var(--text-color);
     text-align: left;
 }
 
-.modal form input {
+.themeModal form input,
+.themeModal form select {
     margin-bottom: 10px;
     padding: 10px;
     background-color: var(--input-background-color);
@@ -681,17 +750,45 @@ select {
     font-size: 16px;
 }
 
-.modal form button {
+.themeModal form button {
     align-self: flex-end;
     padding: 10px 20px;
     background-color: var(--button-background-color);
     border: none;
-    border-radius: 5px;
+    border-radius: 15px;
     color: var(--text-color);
     cursor: pointer;
     font-size: 16px;
+    margin-top: 10px;
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
-.modal form button:hover {
+#editThemeForm button, #addThemeForm button {
+    background: var(--settings-btn-color);
+    color: var(--settings-btn-text);
+}
+
+#addThemeForm button {
+    margin-bottom: 5px;
+}
+
+#editThemeForm:hover button, #addThemeForm:hover button {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    transform: translateY(-3px);
+}
+
+.themeModal form button:hover {
     background-color: var(--button-hover-background-color);
+}
+
+.theme-card {
+    border: 2px solid transparent;
+    padding: 10px;
+    margin: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.theme-card.selected {
+    border-color: blue;
 }

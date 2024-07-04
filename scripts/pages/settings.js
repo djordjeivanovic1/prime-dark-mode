@@ -94,12 +94,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load settings from storage and initialize UI
     function loadSettings() {
-        chrome.storage.local.get(['activeHours', 'extensionShortcut', 'extensionActive'], function(data) {
+        chrome.storage.local.get(['activeHours', 'extensionShortcut', 'extensionActive', 'darkMode', 'currentWebsiteDarkMode', 'filters'], function(data) {
             const activeHours = data.activeHours || {};
             const extensionShortcut = data.extensionShortcut !== undefined ? data.extensionShortcut : true;
-            const extensionActive = data.extensionActive !== undefined ? data.extensionActive : false;
+            const extensionActive = data.extensionActive !== undefined ? data.extensionActive : true;
 
-            document.getElementById('setHoursToggle').checked = activeHours.enabled || false;
+            // Ensure time settings are off by default
+            document.getElementById('setHoursToggle').checked = activeHours.enabled !== undefined ? activeHours.enabled : false;
             startTimeHour.value = activeHours.startHour || '08';
             startTimeMinute.value = activeHours.startMinute || '00';
             startTimePeriod.value = activeHours.startPeriod || 'AM';
@@ -107,6 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             endTimeMinute.value = activeHours.endMinute || '00';
             endTimePeriod.value = activeHours.endPeriod || 'PM';
 
+            // Ensure other toggles are on by default
             document.getElementById('shortcutToggle').checked = extensionShortcut;
             document.getElementById('activeToggle').checked = extensionActive;
 
@@ -114,6 +116,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             isShortcutEnabled = extensionShortcut; // Set initial shortcut state
             checkExtensionStatus(activeHours, extensionActive);
+
+            // Apply dark mode if use system settings is not enabled
+            if (!document.getElementById('activeToggle').checked && data.darkMode !== undefined) {
+                if (data.darkMode) {
+                    activateExtension();
+                } else {
+                    deactivateExtension();
+                }
+            }
         });
     }
 
@@ -136,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activeHours: activeHours,
             extensionShortcut: extensionShortcut,
             extensionActive: extensionActive,
+            darkMode: extensionActive // Save dark mode state
         }, function() {
             alert('Settings saved!');
             isShortcutEnabled = extensionShortcut; // Update shortcut state
@@ -145,14 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to deactivate the extension
     function deactivateExtension() {
-        chrome.storage.local.set({ extensionActive: true }, function() {
-            chrome.runtime.sendMessage({ action: 'applyFilters', filters: {
-                brightness: 100,
-                contrast: 100,
-                sepia: 0,
-                greyscale: 0
-            }});
-        });
         chrome.storage.local.set({ extensionActive: false }, function() {
             chrome.runtime.sendMessage({ action: 'clearAllFilters' });
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -171,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
         disablePage();
     }
 
- // Function to activate the extension
+    // Function to activate the extension
     function activateExtension() {
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
             const tab = tabs[0];
@@ -183,17 +187,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     action: "applyFilters",
                     filters: websiteFilters
                 });
-            });    
+            });
+
+            // Check and apply dark mode
+            chrome.storage.local.get(["darkMode", "currentWebsiteDarkMode"], function(data) {
+                const darkMode = data.darkMode;
+                const currentWebsiteDarkMode = data.currentWebsiteDarkMode[hostname];
+
+                if (currentWebsiteDarkMode !== undefined ? currentWebsiteDarkMode : darkMode) {
+                    chrome.tabs.sendMessage(tab.id, { action: 'toggleDarkMode', darkMode: true });
+                }
+            });
         });
         // Enable navigation buttons
         enablePage();
     }
 
-        
-
     // Disable navigation buttons
     function disablePage() {
-        const navButtons = document.querySelectorAll('.options .button-group .button');
+        const navButtons = document.querySelectorAll('.button');
         navButtons.forEach(button => {
             button.disabled = true;
             button.style.pointerEvents = 'none';
@@ -207,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enable navigation buttons
     function enablePage() {
-        const navButtons = document.querySelectorAll('.options .button-group .button');
+        const navButtons = document.querySelectorAll('.button');
         navButtons.forEach(button => {
             button.disabled = false;
             button.style.pointerEvents = 'auto';
@@ -230,30 +242,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listener for toggling extension activation
     document.getElementById('activeToggle').addEventListener('change', function() {
         const active = this.checked;
-        if (active) {
-            activateExtension();
-        } else {
-            deactivateExtension();
-        }
+        chrome.storage.local.set({ extensionActive: active }, function() {
+            if (active) {
+                activateExtension();
+            } else {
+                deactivateExtension();
+            }
+        });
     });
 
     // Event listener for shortcut toggle
     document.getElementById('shortcutToggle').addEventListener('change', function() {
         isShortcutEnabled = this.checked;
+        chrome.storage.local.set({ extensionShortcut: isShortcutEnabled });
     });
 
     // Listen for the keyboard shortcut
     document.addEventListener('keydown', function(event) {
         if (isShortcutEnabled && (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
             chrome.storage.local.get(['extensionActive'], function(result) {
-                const isActive = result.extensionActive !== undefined ? result.extensionActive : false;
+                const isActive = result.extensionActive !== undefined ? result.extensionActive : true;
                 const newState = !isActive;
-                if (newState) {
-                    activateExtension();
-                } else {
-                    deactivateExtension();
-                }
                 chrome.storage.local.set({ extensionActive: newState }, function() {
+                    if (newState) {
+                        activateExtension();
+                    } else {
+                        deactivateExtension();
+                    }
                     document.getElementById('activeToggle').checked = newState;
                 });
             });

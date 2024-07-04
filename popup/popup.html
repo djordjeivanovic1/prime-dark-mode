@@ -111,7 +111,7 @@
             </div>
         </div>
 
-        <div class="slider-container">
+        <div class="slider-container" id="greySlider">
             <div class="slider-label">
                 <label for="greyscaleSlider">Greyscale</label>
                 <span class="counter" id="greyscaleValue">0</span>
@@ -133,13 +133,24 @@
             </div>
         </div>
 
+        <!-- MODAL TO SHOW INFO -->
+        <div id="customModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="modalBody">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+
         <!-- SAVE THE CURRENT SET  -->
         <div class="button-container">
             <button id="addThemeButton" href="../popup/add-theme-popup.html">Save as Theme</button>
             <button id="saveSettingsButton">Save settings</button>
         </div>
 
-
+    
     </div>
     <script src="../scripts/pages/popup.js"></script>
     <script src="../scripts/pages/navigation.js"></script>

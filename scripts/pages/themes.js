@@ -9,7 +9,7 @@ function selectTheme(themeCard, themeName) {
     });
 
     // Highlight the selected theme card
-    themeCard.style.border = '2px solid blue';
+    themeCard.style.border = '2px solid var(--border-color)';
     themeCard.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
     themeCard.style.transform = 'scale(1.05)';
 
@@ -42,10 +42,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const themeCard = document.createElement('div');
             themeCard.className = 'theme-card';
             themeCard.dataset.themeName = themeName;
+
+            // Truncate theme name if longer than 25 characters
+            const displayName = themeName.length > 20 ? themeName.substring(0, 17) + '...' : themeName;
+
             themeCard.innerHTML = `
                 <div class="theme-preview" style="background: ${themeGradients[styleIndex % themeGradients.length]};"></div>
-                <div class="theme-title">${themeName}</div>
+                <div class="theme-title">${displayName} <span class="edit-icon" title="Edit Theme">&#9998;</span></div>
             `;
+
+            themeCard.querySelector('.edit-icon').addEventListener('click', (event) => {
+                event.stopPropagation();
+                editTheme(themeName);
+            });
+
             themeCard.addEventListener('click', () => selectTheme(themeCard, themeName));
             themeContainer.appendChild(themeCard);
 
@@ -80,5 +90,11 @@ function applyTheme() {
         } else {
             alert('No filters found for the selected theme.');
         }
+    });
+}
+
+function editTheme(themeName) {
+    chrome.storage.local.set({ themeToEdit: themeName }, function() {
+        window.location.href = 'add-theme.html';
     });
 }
