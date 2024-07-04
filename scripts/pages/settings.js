@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check if current time is within a specified time range
     function isWithinTimeRange(currentHour, currentMinute, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod) {
-        const current24Hour = convertTo24Hour(currentHour, startPeriod);
+        const current24Hour = currentHour;
         const start24Hour = convertTo24Hour(startHour, startPeriod);
         const end24Hour = convertTo24Hour(endHour, endPeriod);
 
@@ -158,49 +158,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to deactivate the extension
     function deactivateExtension() {
         chrome.storage.local.set({ extensionActive: false }, function() {
-            chrome.runtime.sendMessage({ action: 'clearAllFilters' });
-            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            chrome.tabs.query({}, function(tabs) {
                 tabs.forEach(tab => {
-                    chrome.storage.local.get(['darkMode'], function(result) {
-                        if (result.darkMode) {
-                            chrome.tabs.sendMessage(tab.id, { action: 'clearAllFilters' });
-                            chrome.tabs.sendMessage(tab.id, { action: 'toggleDarkMode', darkMode: false });
-                            chrome.tabs.sendMessage(tab.id, { action: 'toggleCurrentWebsiteDarkMode', darkMode: false });
-                        }
-                    });
+                    const filters = {
+                        brightness: 100,
+                        contrast: 100,
+                        sepia: 0,
+                        greyscale: 0
+                    };
+                    chrome.tabs.sendMessage(tab.id, { action: "applyFilters", filters: filters });
+                    chrome.tabs.sendMessage(tab.id, { action: "toggleDarkMode", darkMode: false });
                 });
             });
+            disablePage();
         });
-
-        disablePage();
     }
 
     // Function to activate the extension
     function activateExtension() {
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            const tab = tabs[0];
-            const hostname = new URL(tab.url).hostname;
-            // Retrieve and apply website-specific filters
-            chrome.storage.local.get(["filters"], (data) => {
-                const websiteFilters = data.filters ? data.filters[hostname] : {};
-                chrome.tabs.sendMessage(tab.id, {
-                    action: "applyFilters",
-                    filters: websiteFilters
+        chrome.storage.local.set({ extensionActive: true }, function() {
+            chrome.tabs.query({}, function(tabs) {
+                tabs.forEach(tab => {
+                    chrome.storage.local.get(['filters', 'darkMode', 'currentWebsiteDarkMode'], function(data) {
+                        const hostname = new URL(tab.url).hostname;
+                        const filters = data.filters[hostname] || data.filters || {
+                            brightness: 100,
+                            contrast: 100,
+                            sepia: 30,
+                            greyscale: 50
+                        };
+                        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+                            ? data.currentWebsiteDarkMode[hostname] 
+                            : data.darkMode;
+
+                        chrome.tabs.sendMessage(tab.id, { action: "applyFilters", filters: filters });
+                        chrome.tabs.sendMessage(tab.id, { action: "toggleDarkMode", darkMode: darkMode });
+                    });
                 });
             });
-
-            // Check and apply dark mode
-            chrome.storage.local.get(["darkMode", "currentWebsiteDarkMode"], function(data) {
-                const darkMode = data.darkMode;
-                const currentWebsiteDarkMode = data.currentWebsiteDarkMode[hostname];
-
-                if (currentWebsiteDarkMode !== undefined ? currentWebsiteDarkMode : darkMode) {
-                    chrome.tabs.sendMessage(tab.id, { action: 'toggleDarkMode', darkMode: true });
-                }
-            });
+            enablePage();
         });
-        // Enable navigation buttons
-        enablePage();
     }
 
     // Disable navigation buttons
@@ -211,10 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
             button.style.pointerEvents = 'none';
             button.style.cursor = 'not-allowed';
         });
-        const hoursToggle = document.getElementById('setHoursToggle');
-        hoursToggle.disabled = true;
-        const shortcutToggle = document.getElementById('shortcutToggle');
-        shortcutToggle.disabled = true;
+        document.getElementById('setHoursToggle').disabled = true;
+        document.getElementById('shortcutToggle').disabled = true;
     }
 
     // Enable navigation buttons
@@ -225,10 +220,8 @@ document.addEventListener('DOMContentLoaded', function() {
             button.style.pointerEvents = 'auto';
             button.style.cursor = 'pointer';
         });
-        const hoursToggle = document.getElementById('setHoursToggle');
-        hoursToggle.disabled = false;
-        const shortcutToggle = document.getElementById('shortcutToggle');
-        shortcutToggle.disabled = false;
+        document.getElementById('setHoursToggle').disabled = false;
+        document.getElementById('shortcutToggle').disabled = false;
     }
 
     // Event listener for toggling time settings visibility
@@ -257,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({ extensionShortcut: isShortcutEnabled });
     });
 
-    // Listen for the keyboard shortcutcd 
+    // Listen for the keyboard shortcut
     document.addEventListener('keydown', function(event) {
         if (isShortcutEnabled && (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
             chrome.storage.local.get(['extensionActive'], function(result) {

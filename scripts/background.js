@@ -33,6 +33,38 @@ chrome.runtime.onInstalled.addListener(async () => {
     applySettings();
 });
 
+function applyDarkMode(tabId, darkModeOn) {
+    chrome.tabs.sendMessage(tabId, {
+        action: 'toggleDarkMode',
+        darkMode: darkModeOn
+    }, function(response) {
+        if (response && response.success) {
+            if (darkModeOn) {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'applyFilters',
+                    filters: {
+                        brightness: 50,
+                        contrast: 70,
+                        sepia: 0,
+                        greyscale: 30
+                    }
+                });
+            } else {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'applyFilters',
+                    filters: {
+                        brightness: 100,
+                        contrast: 100,
+                        sepia: 0,
+                        greyscale: 0
+                    }
+                });
+            }
+        }
+    });
+}
+
+
 // Apply settings on startup
 chrome.runtime.onStartup.addListener(() => {
     applySettings();
@@ -83,74 +115,77 @@ function applySettings() {
     });
 }
 
+// Function to apply dark mode on newly opened tabs
+function checkAndApplyDarkMode(tabId) {
+    chrome.storage.local.get("darkMode", (data) => {
+        const darkMode = data.darkMode || false;
+        applyDarkMode(tabId, darkMode);
+    });
+}
+
+// Function to apply settings to a tab
+function applySettingsToTab(tabId, tabUrl) {
+    if (!tabUrl || forbiddenSchemes.some(scheme => tabUrl.startsWith(scheme))) {
+        return;
+    }
+
+    const url = new URL(tabUrl);
+    const hostname = url.hostname;
+
+    chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
+        const websiteFilters = data.filters[hostname] || {};
+        chrome.tabs.sendMessage(tabId, {
+            action: "applyFilters",
+            filters: websiteFilters
+        });
+
+        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+            ? data.currentWebsiteDarkMode[hostname] 
+            : data.darkMode;
+
+        chrome.tabs.sendMessage(tabId, {
+            action: "toggleDarkMode",
+            darkMode: darkMode
+        });
+    });
+}
+
 // Apply settings to new tabs
 chrome.tabs.onCreated.addListener((tab) => {
-    if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-        const url = new URL(tab.url);
-        const hostname = url.hostname;
-
-        chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-            const websiteFilters = data.filters[hostname] || {};
-                chrome.tabs.sendMessage(tab.id, {
-                    action: "applyFilters",
-                    filters: websiteFilters
-                });
-
-            const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-                ? data.currentWebsiteDarkMode[hostname] 
-                : data.darkMode;
-
-            chrome.tabs.sendMessage(tab.id, {
-                action: "toggleDarkMode",
-                darkMode: darkMode
-            });
-        });
+    checkAndApplyDarkMode(tab.id);
+    if (tab.url) {
+        applySettingsToTab(tab.id, tab.url);
     }
 });
 
-chrome.tabs.onUpdated.addListener((tab) => {
-    if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-        const url = new URL(tab.url);
-        const hostname = url.hostname;
-
-        chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-            const websiteFilters = data.filters[hostname] || {};
-                chrome.tabs.sendMessage(tab.id, {
-                    action: "applyFilters",
-                    filters: websiteFilters
-                });
-
-            const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-                ? data.currentWebsiteDarkMode[hostname] 
-                : data.darkMode;
-
-            chrome.tabs.sendMessage(tab.id, {
-                action: "toggleDarkMode",
-                darkMode: darkMode
-            });
-        });
+// Apply settings to updated tabs
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tab.url) {
+        checkAndApplyDarkMode(tabId);
+        applySettingsToTab(tabId, tab.url);
     }
 });
 
-// Helper function to clear all filters
-function clearAllFilters() {
-    chrome.storage.local.set({ filters: {} }, () => {
+
+// Helper function to clear all filters and reset dark mode
+function clearAllSettings() {
+    chrome.storage.local.set({
+        filters: {},
+        currentWebsiteDarkMode: {},
+        darkMode: false,
+    }, () => {
         chrome.tabs.query({}, (tabs) => {
             tabs.forEach((tab) => {
-                const url = new URL(tab.url);
-                const hostname = url.hostname;
-                chrome.storage.local.get("filters", (data) => {
-                    const websiteFilters = data.filters[hostname] || {};
-                    websiteFilters = {};
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "applyFilters",
-                        filters: websiteFilters
-                    });
-                });
+                if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+                    chrome.tabs.sendMessage(tab.id, { action: 'clearAllFilters' });
+                    chrome.tabs.sendMessage(tab.id, { action: 'toggleDarkMode', darkMode: false });
+                    chrome.tabs.sendMessage(tab.id, { action: 'clearThemes' });
+                }
             });
         });
     });
 }
+
 
 // Message handlers
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -241,7 +276,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
         return true;
     } else if (request.action === "clearAllFilters") {
-        clearAllFilters();
+        clearAllSettings();
+        sendResponse({ status: 'settings cleared' });
     }
 });
 
@@ -260,4 +296,72 @@ function deactivateExtension() {
     chrome.storage.local.set({ extensionActive: false }, function() {
         chrome.runtime.sendMessage({ action: 'clearAllFilters' });
     });
+}
+
+    // Function to deactivate the extension
+function deactivateExtension() {
+        chrome.storage.local.get(['filters'], function(data) {
+            const filters = {
+                brightness: 100,
+                contrast: 100,
+                sepia: 0,
+                greyscale: 0
+            }
+            const darkMode = false
+            chrome.storage.local.set({ darkMode: darkMode }, function() {
+                applyDarkMode(tab.id, darkMode);
+            });
+            chrome.tabs.sendMessage({action: "applyFilters", filters: filters});
+        });
+        disablePage();
+}
+
+    // Function to activate the extension
+function activateExtension() {
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            forEach(tab => {
+                chrome.storage.local.get(['filters'], function(data) {
+
+                    const filters= data.filters || {    brightness: 100,
+                                                        contrast: 100,
+                                                        sepia: 30,
+                                                        greyscale: 50
+                                                    }
+                    if (filters) {
+                        chrome.tabs.sendMessage(tab.id, { action: "applyFilters", filters: filters });
+                    }
+                });
+            });
+        });
+
+        enablePage();
+}
+
+
+    // Disable navigation buttons
+function disablePage() {
+        const navButtons = document.querySelectorAll('.button');
+        navButtons.forEach(button => {
+            button.disabled = true;
+            button.style.pointerEvents = 'none';
+            button.style.cursor = 'not-allowed';
+        });
+        const hoursToggle = document.getElementById('setHoursToggle');
+        hoursToggle.disabled = true;
+        const shortcutToggle = document.getElementById('shortcutToggle');
+        shortcutToggle.disabled = true;
+}
+
+    // Enable navigation buttons
+function enablePage() {
+        const navButtons = document.querySelectorAll('.button');
+        navButtons.forEach(button => {
+            button.disabled = false;
+            button.style.pointerEvents = 'auto';
+            button.style.cursor = 'pointer';
+        });
+        const hoursToggle = document.getElementById('setHoursToggle');
+        hoursToggle.disabled = false;
+        const shortcutToggle = document.getElementById('shortcutToggle');
+        shortcutToggle.disabled = false;
 }
