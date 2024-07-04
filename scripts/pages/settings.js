@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check if current time is within a specified time range
     function isWithinTimeRange(currentHour, currentMinute, startHour, startMinute, startPeriod, endHour, endMinute, endPeriod) {
-        const current24Hour = currentHour;
+        const current24Hour = convertTo24Hour(currentHour, startPeriod);
         const start24Hour = convertTo24Hour(startHour, startPeriod);
         const end24Hour = convertTo24Hour(endHour, endPeriod);
 
@@ -155,8 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to deactivate the extension
-    function deactivateExtension() {
+     // Function to deactivate the extension
+     function deactivateExtension() {
         chrome.storage.local.set({ extensionActive: false }, function() {
             chrome.tabs.query({}, function(tabs) {
                 tabs.forEach(tab => {
@@ -181,11 +181,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 tabs.forEach(tab => {
                     chrome.storage.local.get(['filters', 'darkMode', 'currentWebsiteDarkMode'], function(data) {
                         const hostname = new URL(tab.url).hostname;
-                        const filters = data.filters[hostname] || data.filters || {
-                            brightness: 100,
-                            contrast: 100,
-                            sepia: 30,
-                            greyscale: 50
+                        const filters = data.filters[hostname] || {
+                            brightness: 50,
+                            contrast: 70,
+                            sepia: 0,
+                            greyscale: 30
                         };
                         const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
                             ? data.currentWebsiteDarkMode[hostname] 
@@ -208,8 +208,10 @@ document.addEventListener('DOMContentLoaded', function() {
             button.style.pointerEvents = 'none';
             button.style.cursor = 'not-allowed';
         });
-        document.getElementById('setHoursToggle').disabled = true;
-        document.getElementById('shortcutToggle').disabled = true;
+        const hoursToggle = document.getElementById('setHoursToggle');
+        hoursToggle.disabled = true;
+        const shortcutToggle = document.getElementById('shortcutToggle');
+        shortcutToggle.disabled = true;
     }
 
     // Enable navigation buttons
@@ -220,8 +222,10 @@ document.addEventListener('DOMContentLoaded', function() {
             button.style.pointerEvents = 'auto';
             button.style.cursor = 'pointer';
         });
-        document.getElementById('setHoursToggle').disabled = false;
-        document.getElementById('shortcutToggle').disabled = false;
+        const hoursToggle = document.getElementById('setHoursToggle');
+        hoursToggle.disabled = false;
+        const shortcutToggle = document.getElementById('shortcutToggle');
+        shortcutToggle.disabled = false;
     }
 
     // Event listener for toggling time settings visibility
@@ -250,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({ extensionShortcut: isShortcutEnabled });
     });
 
-    // Listen for the keyboard shortcut
+    // Listen for the keyboard shortcutcd 
     document.addEventListener('keydown', function(event) {
         if (isShortcutEnabled && (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
             chrome.storage.local.get(['extensionActive'], function(result) {
@@ -270,3 +274,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadSettings();
 });
+  

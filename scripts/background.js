@@ -12,7 +12,6 @@ chrome.runtime.onInstalled.addListener(async () => {
         currentWebsiteDarkMode: {},
     });
 
-
     const manifest = chrome.runtime.getManifest();
     const contentScripts = manifest.content_scripts || [];
 
@@ -32,38 +31,6 @@ chrome.runtime.onInstalled.addListener(async () => {
 
     applySettings();
 });
-
-function applyDarkMode(tabId, darkModeOn) {
-    chrome.tabs.sendMessage(tabId, {
-        action: 'toggleDarkMode',
-        darkMode: darkModeOn
-    }, function(response) {
-        if (response && response.success) {
-            if (darkModeOn) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 50,
-                        contrast: 70,
-                        sepia: 0,
-                        greyscale: 30
-                    }
-                });
-            } else {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 100,
-                        contrast: 100,
-                        sepia: 0,
-                        greyscale: 0
-                    }
-                });
-            }
-        }
-    });
-}
-
 
 // Apply settings on startup
 chrome.runtime.onStartup.addListener(() => {
@@ -91,23 +58,26 @@ function applySettings() {
             if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
                 const url = new URL(tab.url);
                 const hostname = url.hostname;
-                
-                chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-                    if (data.filters) {
-                        const websiteFilters = data.filters[hostname] || {};
-                        chrome.tabs.sendMessage(tab.id, {
-                            action: "applyFilters",
-                            filters: websiteFilters
-                        });
-                    }
 
+                chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
+                    const filters = data.filters[hostname] || initialFilters;
                     const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
                         ? data.currentWebsiteDarkMode[hostname] 
                         : data.darkMode;
 
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "toggleDarkMode",
-                        darkMode: darkMode
+                    chrome.scripting.executeScript({
+                        target: { tabId: tab.id },
+                        files: ['content.js']
+                    }, () => {
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "applyFilters",
+                            filters: filters
+                        });
+
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "toggleDarkMode",
+                            darkMode: darkMode
+                        });
                     });
                 });
             }
@@ -133,10 +103,10 @@ function applySettingsToTab(tabId, tabUrl) {
     const hostname = url.hostname;
 
     chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-        const websiteFilters = data.filters[hostname] || {};
+        const filters = data.filters[hostname] || initialFilters;
         chrome.tabs.sendMessage(tabId, {
             action: "applyFilters",
-            filters: websiteFilters
+            filters: filters
         });
 
         const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
@@ -166,7 +136,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
 });
 
-
 // Helper function to clear all filters and reset dark mode
 function clearAllSettings() {
     chrome.storage.local.set({
@@ -185,7 +154,6 @@ function clearAllSettings() {
         });
     });
 }
-
 
 // Message handlers
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -217,7 +185,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
-
     } else if (request.action === "toggleDarkMode") {
         chrome.storage.local.set({ darkMode: request.enable }, () => {
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -277,23 +244,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     } else if (request.action === "clearAllFilters") {
         clearAllSettings();
-        sendResponse({ status: 'settings cleared' });
     }
 });
 
-function activateExtension() {
-    chrome.storage.local.set({ extensionActive: true }, function() {
-        chrome.runtime.sendMessage({ action: 'applyFilters', filters: {
-            brightness: 50,
-            contrast: 70,
-            sepia: 0,
-            greyscale: 30
-        }});
+// Function to apply dark mode to a tab
+function applyDarkMode(tabId, darkModeOn) {
+    chrome.tabs.sendMessage(tabId, {
+        action: 'toggleDarkMode',
+        darkMode: darkModeOn
+    }, function(response) {
+        if (response && response.success) {
+            if (darkModeOn) {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'applyFilters',
+                    filters: {
+                        brightness: 50,
+                        contrast: 70,
+                        sepia: 0,
+                        greyscale: 30
+                    }
+                });
+            } else {
+                chrome.tabs.sendMessage(tabId, {
+                    action: 'applyFilters',
+                    filters: {
+                        brightness: 100,
+                        contrast: 100,
+                        sepia: 0,
+                        greyscale: 0
+                    }
+                });
+            }
+        }
     });
 }
 
+// Function to activate the extension
+function activateExtension() {
+    chrome.storage.local.set({ extensionActive: true }, function() {
+        applySettings();
+    });
+}
+
+// Function to deactivate the extension
 function deactivateExtension() {
     chrome.storage.local.set({ extensionActive: false }, function() {
-        chrome.runtime.sendMessage({ action: 'clearAllFilters' });
+        clearAllSettings();
     });
 }
