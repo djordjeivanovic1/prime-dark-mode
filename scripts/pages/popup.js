@@ -289,6 +289,7 @@ function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
     });
 }
 
+
 // Function to update the toggle state based on darkMode setting
 function updateToggleState(darkMode) {
     const globalToggle = document.getElementById('darkModeToggle');

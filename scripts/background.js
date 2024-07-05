@@ -103,29 +103,38 @@ function applySettingsToTab(tabId, tabUrl) {
     const hostname = url.hostname;
 
     chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode", "selectedTheme", "themes"], (data) => {
-        let filters = data.filters[hostname];
-        
-        if (!filters) {
-            const themeFilters = data.themes[data.selectedTheme];
-            filters = themeFilters || initialFilters;
+        // Default filters and dark mode settings
+        let filters = initialFilters;
+        let darkMode = data.darkMode;
+
+        // Check for user-defined settings for the specific website
+        if (data.filters[hostname]) {
+            filters = data.filters[hostname];
+            darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
+                ? data.currentWebsiteDarkMode[hostname] 
+                : data.darkMode;
+        } else if (data.selectedTheme && data.themes[data.selectedTheme]) {
+            // Check for selected theme settings
+            filters = data.themes[data.selectedTheme];
         }
 
-        chrome.tabs.sendMessage(tabId, {
-            action: "applyFilters",
-            filters: filters
-        });
+        // Apply filters and dark mode settings
+        chrome.scripting.executeScript({
+            target: { tabId: tabId },
+            files: ['content.js']
+        }, () => {
+            chrome.tabs.sendMessage(tabId, {
+                action: "applyFilters",
+                filters: filters
+            });
 
-        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-            ? data.currentWebsiteDarkMode[hostname] 
-            : data.darkMode;
-
-        chrome.tabs.sendMessage(tabId, {
-            action: "toggleDarkMode",
-            darkMode: darkMode
+            chrome.tabs.sendMessage(tabId, {
+                action: "toggleDarkMode",
+                darkMode: darkMode
+            });
         });
     });
 }
-
 
 // Apply settings to new tabs
 chrome.tabs.onCreated.addListener((tab) => {
@@ -134,8 +143,11 @@ chrome.tabs.onCreated.addListener((tab) => {
 
 // Apply settings to updated tabs
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-        applySettingsToTab(tab.id, tab.url);   
+    if (changeInfo.status === 'complete') {
+        applySettingsToTab(tabId, tab.url);
+    }
 });
+
 
 // Helper function to clear all filters and reset dark mode
 function clearAllSettings() {
