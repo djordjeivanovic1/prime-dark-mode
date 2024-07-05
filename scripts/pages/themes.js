@@ -66,6 +66,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Function to check and apply the selected theme
+function checkAndApplySelectedTheme() {
+    chrome.storage.local.get(['selectedTheme', 'themes'], function(data) {
+        const selectedTheme = data.selectedTheme;
+        const themes = data.themes || {};
+        const themeFilters = themes[selectedTheme];
+
+        if (themeFilters) {
+            chrome.storage.local.set({ filters: themeFilters }, function() {
+                chrome.tabs.query({}, (tabs) => {
+                    tabs.forEach((tab) => {
+                        if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+                            chrome.tabs.sendMessage(tab.id, {
+                                action: "applyFilters",
+                                filters: themeFilters
+                            });
+                        }
+                    });
+                });
+            });
+        }
+    });
+}
+
+
 function applyTheme() {
     if (!selectedTheme) {
         alert('Please select a theme to apply.');
@@ -76,7 +101,7 @@ function applyTheme() {
         const themeFilters = themes[selectedTheme];
 
         if (themeFilters) {
-            chrome.storage.local.set({ filters: themeFilters }, function() {
+            chrome.storage.local.set({ filters: themeFilters, selectedTheme: selectedTheme }, function() {
                 console.log('Filters set:', themeFilters);
                 chrome.runtime.sendMessage({
                     action: "applyFilters",
@@ -84,6 +109,7 @@ function applyTheme() {
                 }, function(response) {
                     if (response) {
                         alert('Theme applied successfully.');
+                        checkAndApplySelectedTheme(); 
                     }
                 });
             });
@@ -92,6 +118,7 @@ function applyTheme() {
         }
     });
 }
+
 
 function editTheme(themeName) {
     chrome.storage.local.set({ themeToEdit: themeName }, function() {

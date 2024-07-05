@@ -272,28 +272,6 @@ function toggleDarkMode(darkModeOn, tabId) {
     });
 }
 
-// Function to apply dark mode on newly opened tabs
-function checkAndApplyDarkMode(tabId) {
-    chrome.storage.local.get("darkMode", (data) => {
-        const darkMode = data.darkMode || false;
-        applyDarkMode(tabId, darkMode);
-    });
-}
-
-// Listen for new tabs being created and apply dark mode if enabled
-chrome.tabs.onCreated.addListener((tab) => {
-    if (tab.id && !forbiddenSchemes.some(scheme => tab.url && tab.url.startsWith(scheme))) {
-        checkAndApplyDarkMode(tab.id);
-    }
-});
-
-// Listen for tab updates and apply dark mode if enabled
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' && !forbiddenSchemes.some(scheme => tab.url && tab.url.startsWith(scheme))) {
-        checkAndApplyDarkMode(tabId);
-    }
-});
-
 function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
     chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
         if (response.error) {
@@ -519,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const { hostname } = response;
                 chrome.storage.local.get(["currentWebsiteDarkMode"], function(data) {
                     const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
-                    const darkModeOn = !currentWebsiteDarkMode[hostname];  // Toggle the state
+                    const darkModeOn = currentWebsiteDarkMode[hostname];  // Toggle the state
                     toggleCurrentWebsiteDarkMode(darkModeOn, tabId);
                 });
             });

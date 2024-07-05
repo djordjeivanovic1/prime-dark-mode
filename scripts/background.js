@@ -1,5 +1,13 @@
 const forbiddenSchemes = ["chrome://", "edge://", "about:", "file://"];
 
+let initialFilters = {
+    brightness: 100,
+    contrast: 100,
+    sepia: 0,
+    greyscale: 0
+};
+
+
 // Initialize storage items and content scripts on installation
 chrome.runtime.onInstalled.addListener(async () => {
     chrome.storage.local.set({
@@ -85,14 +93,6 @@ function applySettings() {
     });
 }
 
-// Function to apply dark mode on newly opened tabs
-function checkAndApplyDarkMode(tabId) {
-    chrome.storage.local.get("darkMode", (data) => {
-        const darkMode = data.darkMode || false;
-        applyDarkMode(tabId, darkMode);
-    });
-}
-
 // Function to apply settings to a tab
 function applySettingsToTab(tabId, tabUrl) {
     if (!tabUrl || forbiddenSchemes.some(scheme => tabUrl.startsWith(scheme))) {
@@ -102,8 +102,14 @@ function applySettingsToTab(tabId, tabUrl) {
     const url = new URL(tabUrl);
     const hostname = url.hostname;
 
-    chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-        const filters = data.filters[hostname] || initialFilters;
+    chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode", "selectedTheme", "themes"], (data) => {
+        let filters = data.filters[hostname];
+        
+        if (!filters) {
+            const themeFilters = data.themes[data.selectedTheme];
+            filters = themeFilters || initialFilters;
+        }
+
         chrome.tabs.sendMessage(tabId, {
             action: "applyFilters",
             filters: filters
@@ -120,20 +126,15 @@ function applySettingsToTab(tabId, tabUrl) {
     });
 }
 
+
 // Apply settings to new tabs
 chrome.tabs.onCreated.addListener((tab) => {
-    checkAndApplyDarkMode(tab.id);
-    if (tab.url) {
-        applySettingsToTab(tab.id, tab.url);
-    }
+    applySettingsToTab(tab.id, tab.url);
 });
 
 // Apply settings to updated tabs
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status === 'complete' && tab.url) {
-        checkAndApplyDarkMode(tabId);
-        applySettingsToTab(tabId, tab.url);
-    }
+        applySettingsToTab(tab.id, tab.url);   
 });
 
 // Helper function to clear all filters and reset dark mode
