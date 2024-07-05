@@ -260,38 +260,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Function to apply dark mode to a tab
-function applyDarkMode(tabId, darkModeOn) {
-    chrome.tabs.sendMessage(tabId, {
-        action: 'toggleDarkMode',
-        darkMode: darkModeOn
-    }, function(response) {
-        if (response && response.success) {
-            if (darkModeOn) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 50,
-                        contrast: 70,
-                        sepia: 0,
-                        greyscale: 30
-                    }
-                });
-            } else {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 100,
-                        contrast: 100,
-                        sepia: 0,
-                        greyscale: 0
-                    }
-                });
-            }
-        }
-    });
-}
-
 // Function to activate the extension
 function activateExtension() {
     chrome.storage.local.set({ extensionActive: true }, function() {

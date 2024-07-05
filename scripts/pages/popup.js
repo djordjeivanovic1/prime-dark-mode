@@ -228,7 +228,26 @@ function showModal(content) {
         }
     });
 }
+////// INVERSION ////////
+function isDark(color) {
+    if (!color) return false;
+    const rgb = color.match(/\d+/g);
+    if (!rgb) return false;
+    const [r, g, b] = rgb.map(Number);
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luminance < 128;
+}
 
+function getBackgroundColor(element) {
+    const bgColor = window.getComputedStyle(element).backgroundColor;
+    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+        return bgColor;
+    }
+    if (element.parentElement) {
+        return getBackgroundColor(element.parentElement);
+    }
+    return null;
+}
 function applyDarkMode(tabId, darkModeOn) {
     chrome.tabs.sendMessage(tabId, {
         action: 'toggleDarkMode',
@@ -239,10 +258,10 @@ function applyDarkMode(tabId, darkModeOn) {
                 chrome.tabs.sendMessage(tabId, {
                     action: 'applyFilters',
                     filters: {
-                        brightness: 50,
-                        contrast: 70,
-                        sepia: 0,
-                        greyscale: 30
+                        brightness: 80,
+                        contrast: 80,
+                        sepia: 50,
+                        greyscale: 50
                     }
                 });
             } else {
@@ -271,6 +290,7 @@ function toggleDarkMode(darkModeOn, tabId) {
         });
     });
 }
+
 
 function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
     chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
