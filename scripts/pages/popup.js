@@ -411,7 +411,12 @@ const sliders = [
     'greyscaleSlider'
  ];
  
- 
+ const navs = [
+    'filtersButton',
+    'themesButton',
+    'settingsButton'
+ ]
+
  function activateSliders() {
     sliders.forEach((slider) => {
         const sliderElement = document.getElementById(slider);
@@ -419,7 +424,15 @@ const sliders = [
             sliderElement.disabled = false;
         }
     });
- }
+    navs.forEach((navButton) => {
+        const button = document.getElementById(navButton);
+        if (button) {
+            button.disabled = false;
+            button.style.pointerEvents = 'auto';
+            button.style.cursor = 'pointer';
+        };
+    });
+}
 
  function deactivateSliders() {
    sliders.forEach((slider) => {
@@ -428,7 +441,14 @@ const sliders = [
            sliderElement.disabled = true;
        }
    });
-}
+   navs.forEach((navButton) => {
+    const button = document.getElementById(navButton);
+    if (button) {
+        button.disabled = true;
+        button.style.pointerEvents = 'auto';
+        button.style.cursor = 'pointer';
+    };
+});}
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -651,9 +671,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.error(response.error);
                     } else {
                         const { hostname } = response;
-                        chrome.storage.local.get(["currentWebsiteDarkMode"], function(data) {
+                        chrome.storage.local.get(["currentWebsiteDarkMode", "selectTheme", "themes"], function(data) {
                             const currentWebsiteDarkModeData = data.currentWebsiteDarkMode || {};
-                            const darkModeOn = currentWebsiteDarkMode; // Use the current toggle state
+                            const darkModeOn = currentWebsiteDarkMode; 
+                            const selectedTheme = data.selectedTheme;
+                            const themes = data.themes;
 
                             // Update the dark mode setting for the current website
                             currentWebsiteDarkModeData[hostname] = darkModeOn;
@@ -661,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (globalDarkMode) {
                                     // If global dark mode is on, turn it off and log the message
                                     globalToggle.checked = false;
-                                    chrome.storage.local.set({ darkMode: false, filters: {hostname: {}}}, () => {
+                                    chrome.storage.local.set({ darkMode: false, filters: {hostname: {}}, selectTheme: null, themes: {selectedTheme: {}}}, () => {
                                         console.log("Global dark mode turned off.");
                                     });
                                 } else {
