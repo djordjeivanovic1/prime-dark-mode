@@ -317,23 +317,13 @@ function updateToggleState() {
             chrome.storage.local.get(["currentWebsiteDarkMode", "darkMode"], function(data) {
                 const websiteToggle = document.getElementById('currentWebsiteToggle');
                 const globalToggle = document.getElementById('darkModeToggle');
+                globalToggle.checked ? activateSliders() : deactivateSliders();
                 
                 const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
-                const globalDarkMode = data.darkMode || false;
+                const darkMode = data.darkMode || false;
                 
-                const isWebsiteDarkModeOn = currentWebsiteDarkMode[hostname] || false;
-                const isGlobalDarkModeOn = globalDarkMode;
-
-                // Update the toggles
-                websiteToggle.checked = isWebsiteDarkModeOn;
-                globalToggle.checked = isGlobalDarkModeOn;
-
-                // Activate or deactivate sliders and navs based on the dark mode states
-                if (isGlobalDarkModeOn || isWebsiteDarkModeOn) {
-                    activateSliders();
-                } else {
-                    deactivateSliders();
-                }
+                globalToggle.checked = currentWebsiteDarkMode[hostname] || darkMode;
+                websiteToggle.checked = currentWebsiteDarkMode[hostname] || false;
             });
         }
     });
@@ -618,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const globalToggle = document.getElementById('darkModeToggle');
         const globalDarkMode = globalToggle.checked;
         globalDarkMode ? activateSliders() : deactivateSliders();
-
+        
         chrome.storage.local.set({ darkMode: globalDarkMode }, function() {
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
                 if (tabs.length > 0) {
