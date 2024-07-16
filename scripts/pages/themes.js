@@ -3,7 +3,7 @@ let selectedTheme = null;
 const predefinedThemes = {
     "Sepia": { brightness: 100, contrast: 100, sepia: 100, greyscale: 0 },
     "Grey": { brightness: 100, contrast: 100, sepia: 0, greyscale: 100 },
-    "100%": { brightness: 100, contrast: 100, sepia: 0, greyscale: 0 },
+    "No Filters%": { brightness: 100, contrast: 100, sepia: 0, greyscale: 0 },
     "Night Read": { brightness: 60, contrast: 100, sepia: 40, greyscale: 0 }
 };
 

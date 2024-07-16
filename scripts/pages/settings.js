@@ -178,14 +178,28 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({ extensionActive: true }, function() {
             chrome.tabs.query({}, function(tabs) {
                 tabs.forEach(tab => {
-                    chrome.storage.local.get(['filters', 'darkMode', 'currentWebsiteDarkMode'], function(data) {
+                    chrome.storage.local.get(['filters', 'darkMode', 'currentWebsiteDarkMode', 'selectedTheme', 'themes'], function(data) {
                         const hostname = new URL(tab.url).hostname;
-                        const filters = data.filters[hostname] || {
+                        const simpleFilters = {
                             brightness: 100,
-                            contrast: 80,
-                            sepia: 30,
-                            greyscale: 30
+                            contrast: 100,
+                            sepia: 0,
+                            greyscale: 0
                         };
+                        let filters = data.filters[hostname]
+                        if (!filters) {
+                            const themeName = data.selectedTheme;
+                            const themeFilters = data.themes[themeName];
+                            if (themeFilters) {
+                                filters = themeFilters
+                            }
+                            else {
+                                filters = simpleFilters;
+                            }
+                        }
+                        else {
+                            console.log('Using custom filters for ' + hostname);
+                        }
                         const darkMode = true;
 
                         chrome.tabs.sendMessage(tab.id, { action: "applyFilters", filters: filters });
