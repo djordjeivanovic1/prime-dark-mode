@@ -319,10 +319,21 @@ function updateToggleState() {
                 const globalToggle = document.getElementById('darkModeToggle');
                 
                 const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
-                const darkMode = data.darkMode || false;
+                const globalDarkMode = data.darkMode || false;
                 
-                globalToggle.checked = currentWebsiteDarkMode[hostname] || darkMode;
-                websiteToggle.checked = currentWebsiteDarkMode[hostname] || false;
+                const isWebsiteDarkModeOn = currentWebsiteDarkMode[hostname] || false;
+                const isGlobalDarkModeOn = globalDarkMode;
+
+                // Update the toggles
+                websiteToggle.checked = isWebsiteDarkModeOn;
+                globalToggle.checked = isGlobalDarkModeOn;
+
+                // Activate or deactivate sliders and navs based on the dark mode states
+                if (isGlobalDarkModeOn || isWebsiteDarkModeOn) {
+                    activateSliders();
+                } else {
+                    deactivateSliders();
+                }
             });
         }
     });
@@ -602,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event listener for global dark mode toggle button
+
     document.getElementById('darkModeToggle').addEventListener('click', function() {
         const globalToggle = document.getElementById('darkModeToggle');
         const globalDarkMode = globalToggle.checked;
@@ -655,6 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentWebsiteDarkMode = currentWebsiteToggle.checked;
         const globalToggle = document.getElementById('darkModeToggle');
         const globalDarkMode = globalToggle.checked;
+        globalDarkMode ? activateSliders() : deactivateSliders();
         const defaultFilters = {
             brightness: 100,
             contrast: 100,
@@ -677,11 +689,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             currentWebsiteDarkModeData[hostname] = darkModeOn;
                             chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkModeData }, () => {
                                 if (globalDarkMode) {
-                                    // If global dark mode is on, turn it off and log the message
-                                    globalToggle.checked = false;
-                                    toggleNavs(true);
+                                    
                                     chrome.storage.local.set({ currentWebsiteDarkMode: {hostname: false}, darkMode: false, filters: {hostname: {}}, selectTheme: null, themes: {selectedTheme: {}}}, () => {
                                         console.log("Global dark mode turned off.");
+                                        globalToggle.checked = false;
+                                        toggleNavs(true);
+                                        deactivateSliders(); 
                                     });
                                 } else {
                                     // Log that the global dark mode is already off
