@@ -296,7 +296,7 @@ function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
                 currentWebsiteDarkMode[hostname] = darkModeOn;
                 selectedTheme = data.selectedTheme;
                 chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkMode,
-                                           filters: {}, 
+                                           filters: {hostname: {}}, 
                                            selectedTheme: null,
                                            themes: {selectedTheme: {}}
                 
@@ -661,7 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (globalDarkMode) {
                                     // If global dark mode is on, turn it off and log the message
                                     globalToggle.checked = false;
-                                    chrome.storage.local.set({ darkMode: false }, () => {
+                                    chrome.storage.local.set({ darkMode: false, filters: {hostname: {}}}, () => {
                                         console.log("Global dark mode turned off.");
                                     });
                                 } else {
