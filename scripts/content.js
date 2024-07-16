@@ -2,6 +2,14 @@
 // APPLY FILTERS  //
 ////////////////////
 
+function activateDarkMode() {
+    document.querySelector('html').style.filter = 'invert(1) hue-rotate(180deg)';
+    let media = document.querySelectorAll("img, picture, video")
+        media.forEach((element) => {
+        element.style.filter = 'invert(1) hue-rotate(180deg)';
+        });
+}
+
 function applyFilters(filters) {
     const filterString = `
         brightness(${filters.brightness || 100}%) 
@@ -23,7 +31,6 @@ chrome.storage.local.get(["filters"], (data) => {
 // TOGGLE DARK MODE FUNCTIONALITY //
 ////////////////////////////////////
 
-// Function to toggle dark mode
 function toggleDarkMode(darkModeOn) {
     if (darkModeOn) {
         document.body.classList.add('dark-mode');
@@ -31,6 +38,7 @@ function toggleDarkMode(darkModeOn) {
         document.body.classList.remove('dark-mode');
     }
 }
+
 
 // Apply initial dark mode state from storage
 chrome.storage.local.get(["darkMode"], (data) => {
@@ -60,7 +68,6 @@ function clearThemes() {
 //////////////////////////////////////////////////
 // LISTEN FOR MESSAGES FROM BACKGROUND SCRIPT   //
 //////////////////////////////////////////////////
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'toggleDarkMode') {
         toggleDarkMode(request.darkMode);

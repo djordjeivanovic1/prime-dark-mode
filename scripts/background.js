@@ -1,122 +1,112 @@
 const forbiddenSchemes = ["chrome://", "edge://", "about:", "file://"];
 
-let initialFilters = {
+const initialFilters = {
     brightness: 100,
     contrast: 100,
     sepia: 0,
     greyscale: 0
 };
 
-
 // Initialize storage items and content scripts on installation
 chrome.runtime.onInstalled.addListener(async () => {
-    chrome.storage.local.set({
-        filters: {},
-        darkMode: true,
-        themes: {},
-        activeHours: {},
-        extensionShortcut: true,
-        extensionActive: true,
-        currentWebsiteDarkMode: {},
-    });
+    try {
+        await chrome.storage.local.set({
+            filters: {},
+            darkMode: true,
+            themes: {},
+            activeHours: {},
+            extensionShortcut: true,
+            extensionActive: true,
+            currentWebsiteDarkMode: {},
+            selectedTheme: null
+        });
 
-    const manifest = chrome.runtime.getManifest();
-    const contentScripts = manifest.content_scripts || [];
+        const manifest = chrome.runtime.getManifest();
+        const contentScripts = manifest.content_scripts || [];
 
-    for (const cs of contentScripts) {
-        const tabs = await chrome.tabs.query({ url: cs.matches });
-        for (const tab of tabs) {
-            if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-                chrome.scripting.executeScript({
-                    files: cs.js,
-                    target: { tabId: tab.id, allFrames: cs.all_frames },
-                    injectImmediately: cs.run_at === 'document_start',
-                    world: cs.world
-                });
+        for (const cs of contentScripts) {
+            const tabs = await chrome.tabs.query({ url: cs.matches });
+            for (const tab of tabs) {
+                if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
+                    await chrome.scripting.executeScript({
+                        files: cs.js,
+                        target: { tabId: tab.id, allFrames: cs.all_frames },
+                        injectImmediately: cs.run_at === 'document_start',
+                        world: cs.world
+                    });
+                }
             }
         }
-    }
 
-    applySettings();
+        applySettings();
+    } catch (error) {
+        console.error('Error during onInstalled:', error);
+    }
 });
 
 // Apply settings on startup
 chrome.runtime.onStartup.addListener(() => {
-    applySettings();
-});
-
-// Handle command shortcuts
-chrome.commands.onCommand.addListener(async (command) => {
-    if (command === 'toggle-extension') {
-        const data = await chrome.storage.local.get(['extensionActive']);
-        if (data.extensionActive) {
-            deactivateExtension();
-            await chrome.storage.local.set({ extensionActive: false });
-        } else {
-            activateExtension();
-            await chrome.storage.local.set({ extensionActive: true });
-        }
-    }
-});
-
-// Helper function to apply settings to all tabs
-function applySettings() {
-    chrome.tabs.query({}, (tabs) => {
-        tabs.forEach((tab) => {
-            if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-                const url = new URL(tab.url);
-                const hostname = url.hostname;
-
-                chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-                    const filters = data.filters[hostname] || initialFilters;
-                    const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-                        ? data.currentWebsiteDarkMode[hostname] 
-                        : data.darkMode;
-
-                    chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        files: ['content.js']
-                    }, () => {
-                        chrome.tabs.sendMessage(tab.id, {
-                            action: "applyFilters",
-                            filters: filters
-                        });
-
-                        chrome.tabs.sendMessage(tab.id, {
-                            action: "toggleDarkMode",
-                            darkMode: darkMode
-                        });
-                    });
-                });
-            }
-        });
+    chrome.storage.local.set({ darkMode: true }, () => {
+        applySettings();
     });
-}
+});
 
 
 // Function to apply settings to a tab
-function applySettingsToTab(tabId, tabUrl) {
+async function applySettingsToTab(tabId, tabUrl) {
     if (!tabUrl || forbiddenSchemes.some(scheme => tabUrl.startsWith(scheme))) {
         return;
     }
 
-    const url = new URL(tabUrl);
-    const hostname = url.hostname;
+    try {
+        const url = new URL(tabUrl);
+        const hostname = url.hostname;
 
-    chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode"], (data) => {
-        const filters = data.filters[hostname] || initialFilters;
-        chrome.tabs.sendMessage(tabId, {
+        const data = await chrome.storage.local.get(["filters", "darkMode", "currentWebsiteDarkMode", "selectedTheme", "themes"]);
+        let filters = data.filters[hostname];
+        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined
+            ? data.currentWebsiteDarkMode[hostname]
+            : data.darkMode;
+
+        if (darkMode === false) {
+            return; // Dark mode is off, so don't apply any settings
+        }
+
+        if (!filters) {
+            const themeFilters = data.themes[data.selectedTheme];
+            filters = themeFilters || initialFilters;
+        }
+
+        // Apply filters and dark mode settings
+        const response = await chrome.tabs.sendMessage(tabId, {
             action: "applyFilters",
             filters: filters
         });
 
-        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-            ? data.currentWebsiteDarkMode[hostname] 
-            : data.darkMode;
+        if (!response || !response.success) {
+            console.warn(`Failed to apply filters on tab ${tabId}, reloading tab.`);
+            chrome.tabs.reload(tabId);
+        }
 
-        chrome.tabs.sendMessage(tabId, {
+        const darkModeResponse = await chrome.tabs.sendMessage(tabId, {
             action: "toggleDarkMode",
             darkMode: darkMode
+        });
+
+        if (!darkModeResponse || !darkModeResponse.success) {
+            console.warn(`Failed to apply dark mode on tab ${tabId}, reloading tab.`);
+            chrome.tabs.reload(tabId);
+        }
+
+    } catch (error) {
+        console.error('Error applying settings to tab:', error);
+    }
+}
+
+function applySettings() {
+    chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+            applySettingsToTab(tab.id, tab.url);
         });
     });
 }
@@ -128,8 +118,11 @@ chrome.tabs.onCreated.addListener((tab) => {
 
 // Apply settings to updated tabs
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    applySettingsToTab(tabId, tab.url);
+    if (changeInfo.status === 'complete') {
+        applySettingsToTab(tabId, tab.url);
+    }
 });
+
 
 // Helper function to clear all filters and reset dark mode
 function clearAllSettings() {
@@ -180,6 +173,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 });
             }
         });
+        return true;
     } else if (request.action === "toggleDarkMode") {
         chrome.storage.local.set({ darkMode: request.enable }, () => {
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -196,6 +190,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
             });
         });
+        return true;
     } else if (request.action === "toggleCurrentWebsiteDarkMode") {
         chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
             if (response.error) {
@@ -209,7 +204,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 currentWebsiteDarkMode[hostname] = request.darkMode;
                 chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkMode }, () => {
                     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                        if (tabs[0] && !forbiddenSchemes.some(scheme => tabs[0].url.startsWith(scheme))) {
+                        if (tabs[0] && !isDarkTheme) {
                             chrome.scripting.executeScript({
                                 target: { tabId: tabs[0].id },
                                 files: ['content.js']
@@ -239,40 +234,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     } else if (request.action === "clearAllFilters") {
         clearAllSettings();
+        return true;
     }
 });
-
-// Function to apply dark mode to a tab
-function applyDarkMode(tabId, darkModeOn) {
-    chrome.tabs.sendMessage(tabId, {
-        action: 'toggleDarkMode',
-        darkMode: darkModeOn
-    }, function(response) {
-        if (response && response.success) {
-            if (darkModeOn) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 50,
-                        contrast: 70,
-                        sepia: 0,
-                        greyscale: 30
-                    }
-                });
-            } else {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 100,
-                        contrast: 100,
-                        sepia: 0,
-                        greyscale: 0
-                    }
-                });
-            }
-        }
-    });
-}
 
 // Function to activate the extension
 function activateExtension() {

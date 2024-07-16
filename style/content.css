@@ -1,0 +1,10 @@
+.dark-mode {
+    filter: invert(1) hue-rotate(180deg);
+    background: black;
+}
+
+.dark-mode img, 
+.dark-mode picture,
+.dark-mode video {
+    filter: invert(1) hue-rotate(180deg);
+}

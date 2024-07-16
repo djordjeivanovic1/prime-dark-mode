@@ -38,13 +38,13 @@
 
             <!-- TOGGLE DARK MODE ONLY FOR CURRENT WEBSITE -->
             <div class="toggle" id="currentWebsiteToggle">
-                <span id="website-span">Website address</span>
+                <p>Reset:<span id="website-span">website</span></p>
                 <input type="checkbox" id="darkModeToggle">
             </div>
         </div>
 
        <!-- FILTERING OPTIONS AVAILABLE -->
-        <div class="slider-container">
+        <div class="slider-container" id="slider-container">
             <div class="slider-label">
                 <label for="brightnessSlider">Brightness</label>
                 <span class="counter" id="brightnessValue">+50</span>
@@ -147,7 +147,9 @@
         <!-- SAVE THE CURRENT SET  -->
         <div class="button-container">
             <button id="addThemeButton" href="../popup/add-theme-popup.html">Save as Theme</button>
-            <button id="saveSettingsButton">Save settings</button>
+            <button id="saveSettingsButton">
+                Only for current site
+            </button>
         </div>
 
     

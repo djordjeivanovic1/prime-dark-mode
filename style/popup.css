@@ -27,9 +27,40 @@
     --modal-background-color: #2B2B2E;
     --modal-header-background-color: #82D3EE;
     --modal-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --active-button-background-color: #636566;
 
 }
 
+.dark-mode html {
+    filter: invert(1) hue-rotate(180deg);
+    background: black;
+}
+
+.dark-mode img, 
+.dark-mode picture,
+.dark-mode video {
+    filter: invert(0) hue-rotate(0deg);
+}
+
+.dark-mode p,
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6,
+.dark-mode a,
+.dark-mode span,
+.dark-mode label {
+    color: #e0e0e0;
+}
+
+/* Styles for the active button */
+.button.clicked {
+    background: var(--active-button-background-color);
+    color: var(--active-text-color);
+
+}
 /* ///////////////// */
 /* MAIN PAGE STYLING */
 
@@ -54,7 +85,6 @@ body {
     height: 100%;
     padding: 10px;
     background-image: linear-gradient(to bottom right, var(--background-color-begin), var(--background-color-end) 40%);
-    border-radius: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border-color);
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
@@ -134,14 +164,6 @@ body {
     color: var(--hover-text-color); 
 }
 
-/* Styles for the active button */
-.button.active {
-    background: var(--active-button-background-color);
-    color: var(--active-text-color); 
-    border-radius: 25px; 
-}
-
-
 
 /* TOGGLE OPTIONS FOR THE CURRENT WEBSITE AND ON/OFF SWITCH */
 #toggleContainer {
@@ -165,7 +187,15 @@ body {
 
 .toggle label, .toggle span {
     font-size: 14px; 
-    margin-right: 10px; 
+}
+
+#currentWebsiteToggle p span {
+ margin-left: 3px;
+}
+
+.toggle p {
+    font-size: 14px;
+    display:flex;
 }
 
 .toggle input {

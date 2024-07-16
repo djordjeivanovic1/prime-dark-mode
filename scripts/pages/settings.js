@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('timeSettings').style.display = activeHours.enabled ? 'flex' : 'none';
             
             isShortcutEnabled = extensionShortcut; // Set initial shortcut state
-            checkExtensionStatus(activeHours, extensionActive);
 
             // Apply dark mode if use system settings is not enabled
             if (!document.getElementById('activeToggle').checked && data.darkMode !== undefined) {
@@ -150,13 +149,13 @@ document.addEventListener('DOMContentLoaded', function() {
             darkMode: extensionActive // Save dark mode state
         }, function() {
             alert('Settings saved!');
-            isShortcutEnabled = extensionShortcut; // Update shortcut state
-            checkExtensionStatus(activeHours, extensionActive);
+            // isShortcutEnabled = extensionShortcut; // Update shortcut state
+            // checkExtensionStatus(activeHours, extensionActive);
         });
     }
 
-     // Function to deactivate the extension
-     function deactivateExtension() {
+    // Function to deactivate the extension
+    function deactivateExtension() {
         chrome.storage.local.set({ extensionActive: false }, function() {
             chrome.tabs.query({}, function(tabs) {
                 tabs.forEach(tab => {
@@ -182,14 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     chrome.storage.local.get(['filters', 'darkMode', 'currentWebsiteDarkMode'], function(data) {
                         const hostname = new URL(tab.url).hostname;
                         const filters = data.filters[hostname] || {
-                            brightness: 50,
-                            contrast: 70,
-                            sepia: 0,
+                            brightness: 100,
+                            contrast: 80,
+                            sepia: 30,
                             greyscale: 30
                         };
-                        const darkMode = data.currentWebsiteDarkMode[hostname] !== undefined 
-                            ? data.currentWebsiteDarkMode[hostname] 
-                            : data.darkMode;
+                        const darkMode = true;
 
                         chrome.tabs.sendMessage(tab.id, { action: "applyFilters", filters: filters });
                         chrome.tabs.sendMessage(tab.id, { action: "toggleDarkMode", darkMode: darkMode });
@@ -254,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({ extensionShortcut: isShortcutEnabled });
     });
 
-    // Listen for the keyboard shortcutcd 
+    // Listen for the keyboard shortcut
     document.addEventListener('keydown', function(event) {
         if (isShortcutEnabled && (event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'KeyE') {
             chrome.storage.local.get(['extensionActive'], function(result) {
@@ -274,4 +271,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadSettings();
 });
-  

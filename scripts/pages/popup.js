@@ -10,7 +10,8 @@ chrome.runtime.onInstalled.addListener(async () => {
         useSystemSettings: false,
         extensionShortcut: false,
         currentWebsiteDarkMode: {},
-        extensionActive: true
+        extensionActive: true,
+        selectTheme: null,
     });
 
     const manifest = chrome.runtime.getManifest();
@@ -145,10 +146,7 @@ function updateFilters() {
         greyscale: document.getElementById('greyscaleSlider').value,
     };
 
-    // send message to apply the values
-    chrome.runtime.sendMessage({ action: 'applyFilters', filters: filters });
-
-    // set the filters for the current website
+    // Set the filters for the current website
     chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
         if (response.error) {
             console.error(response.error);
@@ -159,11 +157,25 @@ function updateFilters() {
                 filtersData[hostname] = filters;
                 chrome.storage.local.set({ filters: filtersData }, function() {
                     console.log('Website-specific filters updated!');
+
+                    // Apply filters to all tabs with the same hostname
+                    chrome.tabs.query({}, function(tabs) {
+                        tabs.forEach(function(tab) {
+                            const url = new URL(tab.url);
+                            if (url.hostname === hostname) {
+                                chrome.tabs.sendMessage(tab.id, {
+                                    action: "applyFilters",
+                                    filters: filters
+                                });
+                            }
+                        });
+                    });
                 });
             });
         }
     });
 }
+
 
 // Function to update the UI with loaded filters for the current hostname
 function updateUIWithFilters(hostname) {
@@ -198,6 +210,7 @@ function showModal(content) {
     // Function to close the modal
     function closeModal() {
         modal.style.display = 'none';
+        cleanup();
     }
 
     // Event listener for the close button
@@ -220,6 +233,9 @@ function showModal(content) {
         });
     }
 
+    // Automatically close the modal after 2.5 seconds
+    setTimeout(closeModal, 2500);
+
     // Add the cleanup function to be called when the modal is closed
     closeButton.addEventListener('click', cleanup);
     window.addEventListener('click', function(event) {
@@ -229,49 +245,45 @@ function showModal(content) {
     });
 }
 
+
 function applyDarkMode(tabId, darkModeOn) {
     chrome.tabs.sendMessage(tabId, {
         action: 'toggleDarkMode',
         darkMode: darkModeOn
     }, function(response) {
         if (response && response.success) {
-            if (darkModeOn) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 80,
-                        contrast: 80,
-                        sepia: 50,
-                        greyscale: 50
-                    }
-                });
-            } else {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'applyFilters',
-                    filters: {
-                        brightness: 100,
-                        contrast: 100,
-                        sepia: 0,
-                        greyscale: 0
-                    }
-                });
-            }
+            const filters = darkModeOn ? {
+                brightness: 100,
+                contrast: 80,
+                sepia: 0,
+                greyscale: 10
+            } : {
+                brightness: 100,
+                contrast: 100,
+                sepia: 0,
+                greyscale: 0
+            };
+            
+            chrome.tabs.sendMessage(tabId, {
+                action: 'applyFilters',
+                filters: filters
+            });
         }
     });
 }
 
-function toggleDarkMode(darkModeOn, tabId) {
+function toggleDarkMode(darkModeOn) {
     chrome.storage.local.set({ darkMode: darkModeOn }, () => {
-        chrome.tabs.query({}, (tabs) => {
-            tabs.forEach((tab) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length > 0) {
+                const tab = tabs[0];
                 if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
                     applyDarkMode(tab.id, darkModeOn);
                 }
-            });
+            }
         });
     });
 }
-
 
 function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
     chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
@@ -279,10 +291,16 @@ function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
             console.error(response.error);
         } else {
             const { hostname } = response;
-            chrome.storage.local.get("currentWebsiteDarkMode", (data) => {
+            chrome.storage.local.get("currentWebsiteDarkMode, selectedTheme", (data) => {
                 const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
                 currentWebsiteDarkMode[hostname] = darkModeOn;
-                chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkMode }, () => {
+                selectedTheme = data.selectedTheme;
+                chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkMode,
+                                           filters: {}, 
+                                           selectedTheme: null,
+                                           themes: {selectedTheme: {}}
+                
+                }, () => {
                     applyDarkMode(tabId, darkModeOn);
                 });
             });
@@ -290,13 +308,24 @@ function toggleCurrentWebsiteDarkMode(darkModeOn, tabId) {
     });
 }
 
-
-// Function to update the toggle state based on darkMode setting
-function updateToggleState(darkMode) {
-    const globalToggle = document.getElementById('darkModeToggle');
-    globalToggle.checked = darkMode;
-    const websiteToggle = document.getElementById('currentWebsiteToggle');
-    websiteToggle.checked = darkMode;
+function updateToggleState() {
+    chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
+        if (response.error) {
+            console.error(response.error);
+        } else {
+            const { hostname } = response;
+            chrome.storage.local.get(["currentWebsiteDarkMode", "darkMode"], function(data) {
+                const websiteToggle = document.getElementById('currentWebsiteToggle');
+                const globalToggle = document.getElementById('darkModeToggle');
+                
+                const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
+                const darkMode = data.darkMode || false;
+                
+                globalToggle.checked = currentWebsiteDarkMode[hostname] || darkMode;
+                websiteToggle.checked = currentWebsiteDarkMode[hostname] || false;
+            });
+        }
+    });
 }
 
 let initialFilters = {
@@ -330,7 +359,6 @@ function updateUIWithFilters(hostname) {
         document.getElementById('greyscaleValue').textContent = filters.greyscale;
     });
 }
-
 // Utility functions
 function updateButtonColors(slider, decreaseButton, increaseButton) {
     const value = parseInt(slider.value);
@@ -361,7 +389,47 @@ function handleButtonClick(slider, valueSpan, decreaseButton, increaseButton, st
     newValue = Math.max(slider.min, Math.min(slider.max, newValue));
     slider.value = newValue;
     handleSliderInput(slider, valueSpan, decreaseButton, increaseButton);
+    updateFilters();
 }
+
+// Function to reload all tabs with the specific hostname
+function reloadTabsWithHostnameExceptCurrent(hostname, currentTabId) {
+    chrome.tabs.query({}, function(tabs) {
+        tabs.forEach(function(tab) {
+            const url = new URL(tab.url);
+            if (url.hostname === hostname && tab.id !== currentTabId) {
+                chrome.tabs.reload(tab.id);
+            }
+        });
+    });
+}
+
+const sliders = [
+    'brightnessSlider',
+    'contrastSlider',
+    'sepiaSlider',
+    'greyscaleSlider'
+ ];
+ 
+ 
+ function activateSliders() {
+    sliders.forEach((slider) => {
+        const sliderElement = document.getElementById(slider);
+        if (sliderElement) {
+            sliderElement.disabled = false;
+        }
+    });
+ }
+
+ function deactivateSliders() {
+   sliders.forEach((slider) => {
+       const sliderElement = document.getElementById(slider);
+       if (sliderElement) {
+           sliderElement.disabled = true;
+       }
+   });
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const sliders = [
@@ -386,20 +454,27 @@ document.addEventListener('DOMContentLoaded', function() {
             updateFilters();
         });
 
+        // Button click functionality
+        decreaseButtonElement.addEventListener('click', function() {
+            handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, -5);
+        });
+
+        increaseButtonElement.addEventListener('click', function() {
+            handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, 5);
+        });
+
         // Button click and hold functionality
         let intervalId;
 
         const startIncreasing = () => {
-            handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, 1);
             intervalId = setInterval(() => {
-                handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, 1);
+                handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, 5);
             }, 100);
         };
 
         const startDecreasing = () => {
-            handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, -1);
             intervalId = setInterval(() => {
-                handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, -1);
+                handleButtonClick(sliderElement, spanElement, decreaseButtonElement, increaseButtonElement, -5);
             }, 100);
         };
 
@@ -422,7 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
         decreaseButtonElement.addEventListener('touchend', stopAdjusting);
         increaseButtonElement.addEventListener('touchend', stopAdjusting);
     });
-
     // Load initial settings from storage
     chrome.storage.local.get(['darkMode'], function(data) {
         const darkMode = data.darkMode || false; 
@@ -434,10 +508,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (response.error) {
             console.error(response.error);
         } else {
-            const { url, hostname } = response;
+            let { url, hostname } = response;
+    
+            // Truncate the hostname if it's longer than 15 characters
+            if (hostname.length > 13) {
+                hostname = hostname.substring(0, 13) + '...';
+            }
+    
             document.getElementById('website-span').textContent = hostname;
             updateUIWithFilters(hostname);
-
+    
             // Retrieve and apply stored settings for the current website
             chrome.storage.local.get(["filters", "currentWebsiteDarkMode"], (data) => {
                 const currentFilters = data.filters[hostname] || initialFilters;
@@ -450,13 +530,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('contrastValue').textContent = currentFilters.contrast;
                 document.getElementById('sepiaValue').textContent = currentFilters.sepia;
                 document.getElementById('greyscaleValue').textContent = currentFilters.greyscale;
-
+    
                 const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
                 document.getElementById('currentWebsiteToggle').checked = currentWebsiteDarkMode[hostname] || false;
+    
+                // Apply settings to all tabs with the same hostname
+                chrome.tabs.query({}, function(tabs) {
+                    tabs.forEach(function(tab) {
+                        const url = new URL(tab.url);
+                        if (url.hostname === hostname) {
+                            chrome.tabs.sendMessage(tab.id, {
+                                action: 'applyFilters',
+                                filters: currentFilters
+                            });
+                        }
+                    });
+                });
             });
         }
     });
-
+    
     // Save settings button
     document.getElementById('saveSettingsButton').addEventListener('click', () => {
         const filters = {
@@ -478,33 +571,136 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+        if (changeInfo.status === 'complete') {
+            updateToggleState();
+        }
+    });
 
-    // Update the event listener for dark mode toggle button
+    chrome.tabs.onCreated.addListener(function(tab) {
+        if (tab.url) {
+            updateToggleState();
+        }
+    });
+
+    // Event listener for global dark mode toggle button
     document.getElementById('darkModeToggle').addEventListener('click', function() {
-        chrome.storage.local.get(["darkMode"], function(data) {
-            const darkModeOn = data.darkMode || false;
-            chrome.storage.local.set({ darkMode: !darkModeOn }, () => {
-                chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                    toggleDarkMode(!darkModeOn, tabs[0].id);
-                });
+        const globalToggle = document.getElementById('darkModeToggle');
+        const globalDarkMode = globalToggle.checked;
+        globalDarkMode ? activateSliders() : deactivateSliders();
+
+        chrome.storage.local.set({ darkMode: globalDarkMode }, function() {
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+                if (tabs.length > 0) {
+                    const tab = tabs[0];
+                    chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
+                        if (response.error) {
+                            console.error(response.error);
+                        } else {
+                            const { hostname } = response;
+                            chrome.storage.local.get(["currentWebsiteDarkMode"], function(data) {
+                                const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
+                                const darkModeOn = globalDarkMode;
+
+                                // Update the dark mode setting for the current website
+                                currentWebsiteDarkMode[hostname] = darkModeOn;
+                                chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkMode }, () => {
+                                    applyDarkMode(tab.id, darkModeOn);
+                                    document.getElementById('currentWebsiteToggle').checked = darkModeOn;
+
+                                    // Turn off current website toggle if global toggle is on
+                                    if (globalDarkMode) {
+                                        document.getElementById('currentWebsiteToggle').checked = false;
+                                    }
+
+                                    chrome.tabs.query({}, function(tabs) {
+                                        tabs.forEach(function(tab) {
+                                            const url = new URL(tab.url);
+                                            if (url.hostname === hostname) {
+                                                applyDarkMode(tab.id, darkModeOn);
+                                            }
+                                        });
+                                    });
+                                });
+                            });
+                        }
+                    });
+                }
             });
         });
     });
 
     // Event listener for current website dark mode toggle button
     document.getElementById('currentWebsiteToggle').addEventListener('click', function() {
+        const currentWebsiteToggle = document.getElementById('currentWebsiteToggle');
+        const currentWebsiteDarkMode = currentWebsiteToggle.checked;
+        const globalToggle = document.getElementById('darkModeToggle');
+        const globalDarkMode = globalToggle.checked;
+        const defaultFilters = {
+            brightness: 100,
+            contrast: 100,
+            sepia: 0,
+            greyscale: 0
+        };
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            const tabId = tabs[0].id;
-            chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
-                const { hostname } = response;
-                chrome.storage.local.get(["currentWebsiteDarkMode"], function(data) {
-                    const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
-                    const darkModeOn = currentWebsiteDarkMode[hostname];  // Toggle the state
-                    toggleCurrentWebsiteDarkMode(darkModeOn, tabId);
+            if (tabs.length > 0) {
+                const tab = tabs[0];
+                chrome.runtime.sendMessage({ action: "getActiveTabInfo" }, function(response) {
+                    if (response.error) {
+                        console.error(response.error);
+                    } else {
+                        const { hostname } = response;
+                        chrome.storage.local.get(["currentWebsiteDarkMode"], function(data) {
+                            const currentWebsiteDarkModeData = data.currentWebsiteDarkMode || {};
+                            const darkModeOn = currentWebsiteDarkMode; // Use the current toggle state
+
+                            // Update the dark mode setting for the current website
+                            currentWebsiteDarkModeData[hostname] = darkModeOn;
+                            chrome.storage.local.set({ currentWebsiteDarkMode: currentWebsiteDarkModeData }, () => {
+                                if (globalDarkMode) {
+                                    // If global dark mode is on, turn it off and log the message
+                                    globalToggle.checked = false;
+                                    chrome.storage.local.set({ darkMode: false }, () => {
+                                        console.log("Global dark mode turned off.");
+                                    });
+                                } else {
+                                    // Log that the global dark mode is already off
+                                    console.log("Global dark mode is already off.");
+                                }
+
+                                chrome.tabs.query({}, function(allTabs) {
+                                    allTabs.forEach(tab => {
+                                        const url = new URL(tab.url);
+                                        if (url.hostname === hostname) {
+                                            if (!darkModeOn) {
+                                                chrome.storage.local.get(["filters"], function(data) {
+                                                    const filtersData = data.filters || {};
+                                                    delete filtersData[hostname];
+                                                    chrome.storage.local.set({ filters: filtersData }, function() {
+                                                        chrome.tabs.sendMessage(tab.id, {
+                                                            action: 'saveFilters',
+                                                            filters: defaultFilters
+                                                        });
+                                                        applyDarkMode(tab.id, false);
+                                                    });
+                                                });
+                                            } else {
+                                                applyDarkMode(tab.id, darkModeOn);
+                                            }
+                                        }
+                                    });
+                                });
+
+                                document.getElementById('currentWebsiteToggle').checked = darkModeOn;
+                            });
+                        });
+                    }
                 });
-            });
+            }
         });
     });
+
 
     // Event listener for "Save as Theme" button
     document.getElementById('addThemeButton').addEventListener('click', function() {
