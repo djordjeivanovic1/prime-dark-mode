@@ -317,12 +317,11 @@ function updateToggleState() {
             chrome.storage.local.get(["currentWebsiteDarkMode", "darkMode"], function(data) {
                 const websiteToggle = document.getElementById('currentWebsiteToggle');
                 const globalToggle = document.getElementById('darkModeToggle');
-                globalToggle.checked ? activateSliders() : deactivateSliders();
                 
                 const currentWebsiteDarkMode = data.currentWebsiteDarkMode || {};
-                const darkMode = data.darkMode || false;
                 
-                globalToggle.checked = currentWebsiteDarkMode[hostname] || darkMode;
+                globalToggle.checked = currentWebsiteDarkMode[hostname] || false;
+                globalToggle.checked ? activateSliders() : deactivateSliders();
                 websiteToggle.checked = currentWebsiteDarkMode[hostname] || false;
             });
         }
@@ -656,7 +655,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentWebsiteDarkMode = currentWebsiteToggle.checked;
         const globalToggle = document.getElementById('darkModeToggle');
         const globalDarkMode = globalToggle.checked;
-        globalDarkMode ? activateSliders() : deactivateSliders();
         const defaultFilters = {
             brightness: 100,
             contrast: 100,
@@ -708,7 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     });
                                                 });
                                             } else {
-                                                applyDarkMode(tab.id, darkModeOn);
+                                                applyDarkMode(tab.id, false);
                                             }
                                         }
                                     });
