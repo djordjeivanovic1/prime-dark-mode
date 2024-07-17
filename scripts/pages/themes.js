@@ -100,24 +100,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// Function to check and apply the selected theme
 function checkAndApplySelectedTheme() {
-    chrome.storage.local.get(['selectedTheme', 'themes'], function(data) {
+    chrome.storage.local.get(['filters', 'selectedTheme', 'themes'], function(data) {
         const selectedTheme = data.selectedTheme;
         const themes = data.themes || {};
         const themeFilters = themes[selectedTheme];
 
         if (themeFilters) {
-            chrome.storage.local.set({ filters: themeFilters }, function() {
-                chrome.tabs.query({}, (tabs) => {
-                    tabs.forEach((tab) => {
-                        if (!forbiddenSchemes.some(scheme => tab.url.startsWith(scheme))) {
-                            chrome.tabs.sendMessage(tab.id, {
-                                action: "applyFilters",
-                                filters: themeFilters
-                            });
-                        }
-                    });
+            chrome.tabs.query({}, (tabs) => {
+                tabs.forEach((tab) => {
+                    const url = new URL(tab.url);
+                    const hostname = url.hostname;
+                    const filters = data.filters || {};
+
+                    if (!filters[hostname]) {  
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "applyFilters",
+                            filters: themeFilters
+                        });
+                    } else {
+                        console.log(`Filters already applied for ${hostname}`);
+                    }
                 });
             });
         }
@@ -125,31 +128,29 @@ function checkAndApplySelectedTheme() {
 }
 
 function applyTheme() {
-    if (!selectedTheme) {
-        alert('Please select a theme to apply.');
-        return;
-    }
-    chrome.storage.local.get(['themes'], function(data) {
+    chrome.storage.local.get(['selectedTheme', 'themes'], function(data) {
+        const selectedTheme = data.selectedTheme;
         const themes = data.themes || {};
         const themeFilters = themes[selectedTheme];
-        
-        // the problem is here
+
+        if (!selectedTheme) {
+            alert('Please select a theme to apply.');
+            return; // Exit after alert
+        }
+
         if (themeFilters) {
-            chrome.storage.local.set({selectedTheme: selectedTheme }, function() {
-                
-                chrome.runtime.sendMessage({
-                    action: "applyFilters",
-                    filters: themeFilters
-                }, function(response) {
-                    alert('Theme applied successfully.');
-                    checkAndApplySelectedTheme(); 
-                });
+            chrome.storage.local.set({ selectedTheme: selectedTheme }, function() {
+                checkAndApplySelectedTheme();
+                alert('Theme applied successfully.');
             });
         } else {
             alert('No filters found for the selected theme.');
+            return; // Exit after alert
         }
     });
 }
+
+
 
 function editTheme(themeName) {
     chrome.storage.local.set({ themeToEdit: themeName }, function() {
